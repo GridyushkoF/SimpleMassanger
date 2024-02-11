@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hello WS</title>
+    <link rel="stylesheet" href="/static/styles/main.css">
+    <script src="https://cdn.jsdelivr.net/webjars/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js" integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/webjars/stomp-websocket/2.3.4/stomp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="/static/js/main.js"></script>
+</head>
+<body>
+    <div class="main-menu">
+        <div class="search-menu">
+            <label>
+                <input class="search-query-input" type="text" placeholder="Введите имя пользователя">
+            </label>
+            <button onclick="search_contacts_by_username()" class="start-search-by-name-btn">Найти</button>
+        </div>
+        <div class="contacts-container">
+
+        </div>
+        <div class="chat-menu">
+            <div class="messages-container">
+
+            </div>
+            <div class="chat-controllers-menu">
+                <p>Отправка сообщения</p>
+                <label>
+                    <input type="text" class="message-text-input">
+                </label>
+                <button class="send-message-btn">Отправить</button>
+
+            </div>
+        </div>
+    </div>
+</body>
+</html>
