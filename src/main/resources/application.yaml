@@ -17,6 +17,8 @@ spring:
           no-cache: true
       static-locations: classpath:/
   main:
-    lazy-initialization: true
+    lazy-initialization: false
 server:
   port: 8081
+avatars-path: C:/Users/Zver/IdeaProjects/SocialNetwork/avatars
+pinned-images-path: C:/Users/Zver/IdeaProjects/SocialNetwork/pinned_images

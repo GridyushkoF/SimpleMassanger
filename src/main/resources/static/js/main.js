@@ -1,194 +1,273 @@
 //Глобальные переменные
-let selected_contact_name = null
-let selection_type = 'mono'
+let selectedContactName = null
+let selectionType = 'mono'
 let stompClient = null
-let message_operation = 'send'
-let message_id_to_edit = null
-let my_username = null;
-
+let messageOperationType = 'send'
+let messageIdToEdit = null
+let myUsername = null
+let myAvatarFilename = null
+let myUserJson = null
 
 // Упрощение работы с документом HTML DOM
-function doc_create(elementType, className) {
+const $ = (selector) => {return document.querySelector(selector)};
+const $all = (selector) => {
+    let elements = document.querySelectorAll(selector)
+    return [... elements]
+}
+
+function createEl(elementType, className) {
     const element = document.createElement(elementType);
     element.className = className;
     return element;
 }
-function doc_select(className) {
-    return document.querySelector(className)
-}
-function doc_select_all(className) {
-    return document.querySelectorAll(className)
-}
-function create_button_with_text(text, className) {
-    const button = doc_create("button", className);
+function createButtonWithText(text, className) {
+    const button = createEl("button", className);
     button.textContent = text;
     return button;
 }
+function openLink(link) {
+    window.location.href = link
+}
 
 //Прослушиватели событий
-
-function add_contact_click_listener(contact_container) {
-    contact_container.addEventListener("click", () => {
-        selected_contact_name = contact_container.getAttribute("contact-name")
-        if(selection_type === 'mono') {
-            doc_select_all(".contact-container").forEach(container => {
-                console.log("classlist before:" + container.classList)
-                container.classList.remove('selected')
-                console.log("classlist after: " + container.classList)
-            })
+$('.delete-chat-btn').onclick = () => {
+    const selected_option = $('input[type="radio"]:checked')
+    let isLocallyDeletion = selected_option.id === 'delete-locally-option'
+    fetch(
+        isLocallyDeletion
+            ?
+            ('/delete-chat-locally/' + selectedContactName)
+            :
+            ('/delete-chat-request/' + selectedContactName)
+    ).then()
+}
+$('.show-profile-popup-btn').onclick = () => {
+    showPopup($('.profile-overlay'))
+}
+$(".send-message-btn").onclick = () => {
+    if(messageOperationType === 'send') {
+        sendMessage()
+    } else {
+        editMessage()
+        messageOperationType = 'send'
+        $(".send-message-btn").textContent = 'Отправить'
+    }
+    $('.message-text-input').value = ''
+}
+$('.update-profile-avatar-btn').onclick = () => {
+    sendNewAvatar()
+}
+$('.pin-image-btn').onclick = () => {
+    showPopup($('.pin-image-overlay'))
+}
+$('.image-input').onchange = (event) => {
+        let target = event.target;
+        if (!FileReader) {
+            alert('FileReader не поддерживается — облом');
+            return;
         }
-        contact_container.classList.add("selected")
-        get_message_history()
-        console.log("selected contact name: " + selected_contact_name)
-    })
+        if (!target.files.length) {
+            alert('Ничего не загружено');
+            return;
+        }
+        let  fileReader = new FileReader();
+        fileReader.onload = () => {
+            $('.pinned-image').src = fileReader.result;
+        }
+        fileReader.readAsDataURL(target.files[0]);
 }
-function add_delete_message_btn_click_listener(delete_message_btn,message_id) {
-    delete_message_btn.addEventListener('click',() => {
-        delete_message(message_id)
-    })
+$('.send-message-with-image-btn').onclick = () => {
+    sendMessageWithImage()
 }
-function add_edit_message_btn_click_listener(edit_btn, message_id, message_text) {
-    edit_btn.addEventListener('click', () => {
-        message_operation = 'edit';
-        doc_select(".send-message-btn").textContent = 'Изменить';
-        message_id_to_edit = message_id
-        doc_select('.message-text-input').value = message_text
-    });
-}
-function add_confirm_deletion_btn_click_listener(confirm_deletion_btn) {
-    confirm_deletion_btn.onclick = () => {
-
+function initializeAvatarOrDefault(avatarPath,avatarElement) {
+    if(avatarPath !== null && avatarPath !== undefined && !avatarPath.includes('null')) {
+        avatarElement.src = avatarPath
+    } else {
+        avatarElement.src = '/static/img/noImage.png'
     }
 }
 //Методы конвертации JSON с сервера в удобочитаемый вид
-function show_message(message_dto_with_goal) {
-    const
-        { messageText: message,
-            goalId: message_id,
-            goal: message_goal,
-            senderName : sender_name,
-            dateTime : date_time } = message_dto_with_goal;
+function showDeletionRequestUI(messageContainer) {
+    let confirm_deletion_btn = createButtonWithText('Подтвердить','confirm-chat-deletion-btn')
+    confirm_deletion_btn.onclick = () => {
+        sendChatDeletionAnswer("true")
+    }
+    messageContainer.append(confirm_deletion_btn)
+
+    let decline_deletion_btn = createButtonWithText('Отклонить', 'decline-chat-deletion-btn')
+    decline_deletion_btn.onclick = () => {
+        sendChatDeletionAnswer("false")
+    }
+    messageContainer.append(decline_deletion_btn)
+}
+function showMessage(targetedMessageJson) {
+    const { messageText: message,
+            targetId: messageId,
+            target: messageTarget,
+            sender : sender,
+            dateTime : dateTime,
+            pinnedImageFilename : pinnedImageFilename} = targetedMessageJson;
     //Отправитель - не выделенный пользователь и отправитель - не я
-    if (sender_name !== selected_contact_name && sender_name !== my_username) {
+    console.log(myUsername)
+    if (sender.username !== selectedContactName && sender.username !== myUsername) {
         return;
     }
-
-    const all_message_containers = doc_select_all('.message-container');
-
-    const is_date_updated = date_time.includes('изм. ');
-    const date_part_index = is_date_updated ? 1 : 0
-    const date_part = date_time.split(' ')[date_part_index]
-    const time_part = date_time.split(' ')[date_part_index + 1]
-    const message_time = doc_create('p','message-time')
-    message_time.textContent = time_part
-
-    if (message_goal !== 'CREATE' && message_goal !== 'CHAT_DELETE') {
-        for (let i = 0; i < all_message_containers.length; i++) {
-            const message_container = all_message_containers[i];
-            if (message_container.getAttribute('message-id') == message_id) {
-                if (message_goal === 'DELETE') {
-                    doc_select('.messages-container').removeChild(message_container);
-                } else if (message_goal === 'UPDATE') {
-                    let message_text = message_container.querySelector('.message-text');
-                    message_text.textContent = message;
-                    message_container.querySelector('.message-time').textContent = message_time.textContent = 'изм. ' + time_part
+    console.log(JSON.stringify(targetedMessageJson))
+    console.log('pinnedImageFilename: ' + pinnedImageFilename)
+    const isDateUpdated = dateTime.includes('изм. ');
+    const datePartIndex = isDateUpdated ? 1 : 0
+    const datePart = dateTime.split(' ')[datePartIndex]
+    const timePart = dateTime.split(' ')[datePartIndex + 1]
+    const messageTime = createEl('p','message-time')
+    messageTime.textContent = timePart
+    if (messageTarget !== 'CREATE' && messageTarget !== 'CHAT_DELETE') {
+        console.log('messageTarget !== \'CREATE\' && messageTarget !== \'CHAT_DELETE\'')
+        const allSingleMessageContainers = $all('.message-container')
+        for (let i = 0; i < allSingleMessageContainers.length; i++) {
+            let messageContainer = allSingleMessageContainers[i]
+            if(messageContainer.getAttribute('message-id').toString() !== messageId.toString()) {
+                console.log('message-container-id: ' + messageContainer.getAttribute('message-id'))
+                console.log('current message id: ' + messageId.toString())
+                continue;
+            }
+            if (messageContainer) {
+                if (messageTarget === 'DELETE') {
+                    $('.messages-container').removeChild(messageContainer);
+                } else if (messageTarget === 'UPDATE') {
+                    let messageText = messageContainer.querySelector('.message-text');
+                    messageText.textContent = message;
+                    messageContainer.querySelector('.message-time').textContent = messageTime.textContent = 'изм. ' + timePart;
                 }
-                return;
+                console.log('returning void')
+
             }
         }
+        return;
     }
+    const allMessagesContainer = $(".messages-container");
 
-    const messages_container = doc_select(".messages-container");
-    const message_container = doc_create('div', 'message-container');
-    message_container.setAttribute("message-id", message_id);
+    const singleMessageContainer = createEl('div', 'message-container');
+    singleMessageContainer.setAttribute("message-id", messageId);
 
-    const delete_message_btn = create_button_with_text('Удалить', 'delete-message-btn');
-    add_delete_message_btn_click_listener(delete_message_btn, message_id);
+    const deleteMessageBtn = createButtonWithText('Удалить', 'delete-message-btn');
+    deleteMessageBtn.onclick = () => {deleteMessage(messageId)}
 
-    const message_text = doc_create("p", "message-text");
-    message_text.textContent = message;
+    const messageText = createEl("p", "message-text");
+    messageText.textContent = message;
 
-    const edit_message_btn = create_button_with_text('Изменить', 'edit-message-btn');
-    add_edit_message_btn_click_listener(edit_message_btn, message_id, message);
-
-    if(message_goal === 'CHAT_DELETE') {
-        let confirm_deletion_btn = doc_create('button','confirm-chat-deletion-btn')
-        confirm_deletion_btn.textContent = 'Я подтверждаю!'
-        confirm_deletion_btn
+    const editMessageBtn = createButtonWithText('Изменить', 'edit-message-btn');
+    editMessageBtn.onclick = () => {
+        messageOperationType = 'edit';
+        $(".send-message-btn").textContent = 'Изменить';
+        messageIdToEdit = messageId
+        $('.message-text-input').value = message
     }
-    message_container.append(message_text);
-    message_container.append(delete_message_btn);
-    message_container.append(edit_message_btn);
-    message_container.append(message_time)
-    messages_container.append(message_container);
+    if(pinnedImageFilename !== null) {
+        const pinnedImage = createEl('img','pinned-image-to-message')
+        pinnedImage.src = '/pinned-images/' + pinnedImageFilename
+        singleMessageContainer.append(pinnedImage)
+    }
+    singleMessageContainer.append(messageText,deleteMessageBtn,editMessageBtn,messageTime);
+    if(messageTarget === 'CHAT_DELETE') {
+        showDeletionRequestUI(singleMessageContainer)
+    }
+    allMessagesContainer.append(singleMessageContainer);
 }
-function show_contact(contact_name) {
-    const contacts_container = doc_select('.contacts-container')
-    let contact_containers = doc_select_all(".contact-container")
-    contact_containers.forEach(container => {
-        container.remove()
+function showContact(contactJson) {
+    console.log(contactJson)
+    const contactName = contactJson['username']
+    const contactAvatarName = contactJson['avatarName']
+
+    const allContactsContainer = $('.contacts-container')
+    let singleContactContainer = createEl("div","contact-container")
+    let deleteContactBtn = createButtonWithText('del','delete-contact-btn')
+    let contactUsernameText = createEl("p","contact-username")
+    let contactAvatarImg = createEl('img','contact-avatar')
+
+    singleContactContainer.setAttribute("contact-name",contactName)
+    contactUsernameText.textContent = contactName;
+    
+    singleContactContainer.append(
+        contactAvatarImg,
+        contactUsernameText,
+        deleteContactBtn)
+
+    allContactsContainer.append(singleContactContainer)
+    initializeAvatarOrDefault('/avatars/' + contactAvatarName,contactAvatarImg)
+    singleContactContainer.onclick =  () => {
+        selectedContactName = singleContactContainer.getAttribute("contact-name")
+        if(selectionType === 'mono') {
+            $all(".contact-container").forEach(container => {
+                container.classList.remove('selected')
+            })
+        }
+        singleContactContainer.classList.add("selected")
+        getMessageHistory()
+    }
+    deleteContactBtn.onclick = () => {
+        showPopup($('.delete-contact-overlay'))
+    }
+
+}
+function clearAllContactsContainer() {
+    const allContactsContainer = $('.contacts-container')
+    $all(".contact-container").forEach(singleContactContainer => {
+        allContactsContainer.removeChild(singleContactContainer)
     })
-    let new_contact_container = doc_create("div","contact-container")
-    let contact_username = doc_create("p","contact-username")
-    new_contact_container.setAttribute("contact-name",contact_name)
-    contact_username.textContent = contact_name;
-    new_contact_container.append(contact_username)
-    contacts_container.append(new_contact_container)
-    add_contact_click_listener(new_contact_container)
 }
 
 //Методы манипуляции вебсокета
-function connect_to_websocket() {
+function connectToWebSocket() {
     let socket = new SockJS('/messages');
     stompClient = Stomp.over(socket);
     stompClient.connect({}, function (frame) {
         console.log('Connected: ' + frame);
         stompClient.subscribe('/user/topic/private-messages', function (message) {
-            let parsed_message = JSON.parse(message.body)
-            console.log("parsed message: " + parsed_message)
-            console.log("parsed message text: " + parsed_message.messageText)
-            console.log("parsed message id: " + parsed_message.goalId)
-            show_message(parsed_message);
+            let messageJson = JSON.parse(message.body)
+            console.log("parsed message: " + messageJson)
+            console.log("parsed message text: " + messageJson.messageText)
+            console.log("parsed message target: " + messageJson.target)
+            console.log("parsed message id: " + messageJson.targetId)
+            showMessage(messageJson);
         });
         stompClient.subscribe('/user/topic/contacts', () => {
-            get_my_contacts()
+            updateContacts()
         })
     });
 }
 
 //Отправка запросов на сервер:
-function search_contacts_by_username() {
-    const search_query_input = doc_select(".search-query-input")
-    let username = search_query_input.value;
-    window.location.href = '/users/' + username
+function searchContactByUsername() {
+    const searchQueryInput = $(".search-query-input")
+    let username = searchQueryInput.value;
+    openLink('/users/' + username)
 }
-function get_my_contacts() {
+function updateContacts() {
+    clearAllContactsContainer()
     fetch("/get-my-contacts")
         .then(response => response.json())
         .then(result => {
-            let myUserContacts = result.my_user_contacts;
-            myUserContacts.forEach(username => {
-                console.log("username: " + username)
-                show_contact(username)
+            let allContactsJson = result.my_user_contacts;
+            allContactsJson.forEach(contactJson => {
+                showContact(contactJson)
             });
         })
 }
-function get_message_history() {
-    doc_select(".messages-container").innerHTML = ''
-    fetch("/get-message-history/" + selected_contact_name)
+function getMessageHistory() {
+    $(".messages-container").innerHTML = ''
+    fetch("/get-message-history/" + selectedContactName)
         .then(response => response.json())
         .then(result => {
-            let messageHistory = result.message_history;
-            messageHistory.forEach(parsed_message => {
-                show_message(parsed_message)
+            let allMessagesJson = result.message_history;
+            allMessagesJson.forEach(messageJson => {
+                showMessage(messageJson)
             })
-
         })
 }
-function delete_message (message_id) {
+function deleteMessage(message_id) {
     console.log('Id сообщения на удаление: ' + message_id)
     let message_dto = {"messageId" : message_id}
-    fetch("/delete-private-message/" + selected_contact_name, {
+    fetch("/delete-private-message/" + selectedContactName, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -197,17 +276,17 @@ function delete_message (message_id) {
         })
         .then()
 }
-function send_private_message() {
-    let message_text = doc_select(".message-text-input").value
-    if(selected_contact_name !== null && message_operation === 'send') {
-        fetch("/send-private-message/" + selected_contact_name
+function sendMessage() {
+    let messageText = $(".message-text-input").value
+    if(selectedContactName !== null && messageOperationType === 'send') {
+        fetch("/send-private-message/" + selectedContactName
             , {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                "messageText" : message_text
+                "messageText" : messageText
             })
         })
             .then(response => {
@@ -220,50 +299,106 @@ function send_private_message() {
         console.log('Невозможно отправить сообщение пользователю, который не выделен')
     }
 }
-function edit_message() {
-    let new_message_text = doc_select(".message-text-input").value
-    fetch('/edit-private-message/' + selected_contact_name,
+function sendMessageWithImage() {
+    const formData = new FormData();
+    formData.append('caption', $('.caption-input').value);
+    formData.append('image', $('.image-input').files[0]);
+    formData.append('receiverName',selectedContactName)
+
+    // Отправка POST-запроса на сервер с использованием fetch
+    fetch('/send-message-with-image', {
+        method: 'POST',
+        body: formData
+    })
+        .then(response => {
+            if (response.ok) {
+                console.log('Запрос успешно выполнен');
+            } else {
+                console.error('Произошла ошибка при выполнении запроса');
+            }
+        })
+        .catch(error => {
+            console.error('Произошла ошибка:', error);
+        });
+}
+function editMessage() {
+    let newMessageText = $(".message-text-input").value
+    fetch('/edit-private-message/' + selectedContactName,
         {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                "messageText" : new_message_text,
-                "messageId" : message_id_to_edit
+                "messageText" : newMessageText,
+                "messageId" : messageIdToEdit
             })
         }
         ).then(response => console.log('Response of edit:' + response.json()))
 
 }
-function initialize_my_username() {
-    fetch("/get-my-username")
+function initializeMyUser() {
+    fetch('/get-my-user')
         .then(response => response.json())
-        .then(result => {
-            my_username = result.my_username;
-            console.log("Мое имя пользователя: " + my_username);
+        .then(myUser => {
+            console.log('my_user_prop: ' + JSON.stringify(myUser))
+            myUserJson = myUser['my_user'];
+            myUsername = myUserJson['username']
+            myAvatarFilename = myUserJson['avatarName']
+            initializeAvatarOrDefault('/avatars/' + myAvatarFilename,$('.my-profile-avatar'))
         })
-        .catch(error => {
-            console.error(error);
-        });
+        .catch(e => console.error(e))
 }
-function send_chat_deletion_answer () {
-    fetch('')
+function sendChatDeletionAnswer (answer) {
+    fetch('/chat-deletion-voting/' + selectedContactName + "/" + answer).then()
+}
+function sendNewAvatar() {
+    let formData = new FormData();
+    formData.append('profile-avatar', $('.update-profile-avatar-input').files[0]);
+    console.log(formData.get('profile-avatar'));
+
+    fetch('/update-profile-avatar', {
+        method: 'POST',
+        body: formData
+    }).then(response => response.json())
+        .then(r => {
+            myAvatarFilename = '/avatars/' + r['avatar_path']
+            initializeAvatarOrDefault(myAvatarFilename,$('.my-profile-avatar'))
+        })
+        .catch(e => console.log(e));
 }
 //Инициализация страницы
 document.addEventListener("DOMContentLoaded",() => {
-    get_my_contacts();
-    connect_to_websocket();
-    initialize_my_username()
-    let send_message_btn = doc_select(".send-message-btn")
-    send_message_btn.addEventListener('click', () => {
-        if(message_operation === 'send') {
-            send_private_message()
-            doc_select('.message-text-input').value = ''
-        } else {
-            edit_message()
-            message_operation = 'send'
-            doc_select(".send-message-btn").textContent = 'Отправить'
-        }
-    })
+    updateContacts();
+    connectToWebSocket();
+    initializeMyUser()
 })
+//popup works
+function showPopup(popup) {
+    popup.classList.remove('disabled')
+    popup.classList.add('enabled')
+}
+function hidePopup(popup) {
+    popup.classList.remove('enabled')
+    popup.classList.add('disabled')
+}
+$all('.popup-overlay').forEach(popupOverlay => {
+    popupOverlay.onclick = () => {
+        hidePopup(popupOverlay);
+    };
+    const popupMenu = popupOverlay.querySelector('.popup-menu');
+    popupMenu.onclick = (event) => {
+        event.stopPropagation();
+    };
+    const popupExitBtn = popupOverlay.querySelector('.exit-popup-btn')
+    popupExitBtn.onclick = () => {
+        hidePopup(popupOverlay)
+    }
+});
+//TEST
+function init_random_fake_contacts() {
+    showContact('1')
+    showContact('12')
+    showContact('13')
+    showContact('LETTERS')
+}

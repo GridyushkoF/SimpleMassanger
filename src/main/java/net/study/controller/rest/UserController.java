@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 public class UserController {
@@ -62,11 +63,17 @@ public class UserController {
         return ResponseEntity.badRequest().body(Map.of("is_successfully_added", "false"));
     }
     @GetMapping("/get-my-contacts")
-    public ResponseEntity<Map<String, Set<String>>> getMyUserContactList() {
+    public ResponseEntity<Map<String, Set<User>>> getMyUserContactList() {
         Optional<User> myUserOptional = userService.getMyUserOptional();
         if(myUserOptional.isPresent()) {
             User myUser = myUserOptional.get();
-            return ResponseEntity.ok(Map.of("my_user_contacts", myUser.getContactUsernameSet()));
+            Set<User> contactSet = myUser.getContactUsernameSet()
+                    .stream()
+                    .map(userRepository::findByUsername)
+                    .filter(Optional::isPresent)
+                    .map(Optional::get)
+                    .collect(Collectors.toSet());
+            return ResponseEntity.ok(Map.of("my_user_contacts", contactSet));
         }
         return ResponseEntity.badRequest().body(null);
     }
@@ -78,5 +85,9 @@ public class UserController {
             e.printStackTrace();
         }
         return ResponseEntity.badRequest().body(null);
+    }
+    @GetMapping("/get-my-user")
+    public ResponseEntity<Map<String,User>> getMyUser() {
+        return ResponseEntity.ok(Map.of("my_user",userRepository.findByUsername(userService.getMyUsername()).get()));
     }
 }

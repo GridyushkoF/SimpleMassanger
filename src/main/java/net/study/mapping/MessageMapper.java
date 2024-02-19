@@ -1,8 +1,8 @@
 package net.study.mapping;
 
 import net.study.dto.MessageDto;
-import net.study.dto.MessageDtoWithGoal;
-import net.study.dto.MessageGoal;
+import net.study.dto.MessageTarget;
+import net.study.dto.TargetedMessageDto;
 import net.study.model.Message;
 
 public class MessageMapper implements DtoConverter<MessageDto, Message> {
@@ -10,15 +10,28 @@ public class MessageMapper implements DtoConverter<MessageDto, Message> {
     public MessageDto convertToDto(Message message) {
         return new MessageDto(message.getMessageText(),message.getId());
     }
-    public MessageDtoWithGoal convertToMessageDtoWithGoal(
-            Message message,
-            MessageGoal goal) {
-        return new MessageDtoWithGoal(
-                message.getMessageText(),
-                goal,
+    public TargetedMessageDto convertToTargetedMessageDto(
+            Message message, MessageTarget target) {
+        return new TargetedMessageDto(
+                target,
                 message.getId(),
-                message.getSender().getUsername(),
-                message.getDateTime()
+                message.getMessageText(),
+                message.getSender(),
+                message.getReceiver(),
+                message.getDateTime(),
+                message.getPinnedImageFilename()
+        );
+    }
+    public TargetedMessageDto convertToTargetedMessageDto(
+            Message message) {
+        return new TargetedMessageDto(
+                message.getTarget(),
+                message.getId(),
+                message.getMessageText(),
+                message.getSender(),
+                message.getReceiver(),
+                message.getDateTime(),
+                message.getPinnedImageFilename()
         );
     }
 }

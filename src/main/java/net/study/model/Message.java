@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import net.study.dto.MessageTarget;
 import net.study.model.user.User;
 
 import java.time.LocalDateTime;
@@ -21,19 +22,22 @@ public @Data class Message {
     private Long id;
     @Column(name = "message_text",columnDefinition = "MEDIUMTEXT")
     private String messageText;
-    @JoinColumn(name = "sender_id")
     @ManyToOne
     private User sender;
-    @JoinColumn(name = "receiver_id")
     @ManyToOne
     private User receiver;
     private String dateTime;
-    private Long chatId;
+    @Enumerated(EnumType.STRING)
+    private MessageTarget target;
+    private Long targetId;
+    private String pinnedImageFilename;
     public Message(String messageText, User sender, User receiver) {
         this.messageText = messageText;
         this.sender = sender;
         this.receiver = receiver;
         setCurrentDateTime (false);
+        target = MessageTarget.CREATE;
+        targetId = id;
     }
     public void setCurrentDateTime (boolean isChanged) {
 

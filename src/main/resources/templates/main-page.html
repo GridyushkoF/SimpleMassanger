@@ -4,19 +4,21 @@
     <meta charset="UTF-8">
     <title>Hello WS</title>
     <link rel="stylesheet" href="/static/styles/main.css">
-    <script src="https://cdn.jsdelivr.net/webjars/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.socket.io/4.7.4/socket.io.min.js" integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/webjars/stomp-websocket/2.3.4/stomp.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
-    <script src="/static/js/main.js"></script>
+    <script src="/static/js/main.js" defer></script>
 </head>
 <body>
     <div class="main-menu">
+        <header>
+            <button class="show-profile-popup-btn">Профиль</button>
+        </header>
         <div class="search-menu">
             <label>
                 <input class="search-query-input" type="text" placeholder="Введите имя пользователя">
             </label>
-            <button onclick="search_contacts_by_username()" class="start-search-by-name-btn">Найти</button>
+            <button onclick="searchContactByUsername()" class="start-search-by-name-btn">Найти</button>
         </div>
         <div class="contacts-container">
 
@@ -31,9 +33,59 @@
                     <input type="text" class="message-text-input">
                 </label>
                 <button class="send-message-btn">Отправить</button>
-
+                <button class="pin-image-btn">Прикрепить</button>
             </div>
         </div>
+    </div>
+    <div class="template-popups">
+        <div class="popup-overlay delete-contact-overlay disabled">
+            <div class="popup-menu delete-contact-menu">
+                <button class="exit-popup-btn">X</button>
+                <div class="radio-options">
+                    <div>
+                        <input type="radio" id="delete-locally-option" name="contact-delete-options" value="У меня" checked>
+                        <label for="delete-locally-option">У меня</label><br>
+                    </div>
+                    <div>
+                        <input type="radio" id="delete-globally-option" name="contact-delete-options" value="У всех">
+                        <label for="delete-globally-option">У всех</label><br>
+                    </div>
+                </div>
+
+                <button class="delete-chat-btn">Удалить переписку</button>
+            </div>
+        </div>
+        <div class="popup-overlay profile-overlay disabled">
+            <div class="popup-menu profile-menu">
+                <button class="exit-popup-btn">X</button>
+                <img src="/static/avatars/noImage.png" class="my-profile-avatar">
+                <label>
+                    <input class="update-profile-avatar-input" type="file" accept="image/*">
+                </label>
+                <button class="update-profile-avatar-btn">Сохранить</button>
+            </div>
+        </div>
+        <div class="popup-overlay pin-image-overlay disabled">
+            <div class="popup-menu pin-image-menu">
+                <button class="exit-popup-btn">X</button>
+                <input class="image-input" type="file" accept="image/*">
+                <img class="pinned-image">
+                <label>
+                    <input class="caption-input" type="text" placeholder="Подпись">
+                </label>
+                <button class="send-message-with-image-btn">Отправить</button>
+            </div>
+        </div>
+    </div>
+    <div class="unique-popups">
+        <div class="message-options-unique-popup disabled">
+            <button class="exit-popup-btn">X</button>
+
+
+        </div>
+    </div>
+    <div class="message-options-popup disabled">
+
     </div>
 </body>
 </html>

@@ -1,6 +1,6 @@
 package net.study.dto;
 
-public enum MessageGoal {
+public enum MessageTarget {
     CREATE,
     DELETE,
     UPDATE,

@@ -18,8 +18,8 @@ public @Data class User {
     private String username;
     @Column(name = "password")
     private String password;
-    @Column(name = "path_to_avatar")
-    private String pathToAvatar;
+    @Column(name = "avatar_name")
+    private String avatarName;
     @OneToMany(fetch = FetchType.EAGER)
     @JsonProperty(namespace = "role_list")
     private List<Role> roleList;

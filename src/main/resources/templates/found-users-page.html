@@ -9,6 +9,7 @@
     <h3>Найдено по вашему запросу:</h3>
     <div class="found-user-info" th:data-username="${found_user.username}">
         <p th:text="${'Имя пользователя: ' + found_user.getUsername()}"></p>
+        <img th:src="${'/avatars/' +  found_user.getAvatarName()}">
     </div>
     <button onclick="addUserToMyContactList()">Добавить контакт</button>
 </div>
