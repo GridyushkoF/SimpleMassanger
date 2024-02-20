@@ -7,6 +7,8 @@ let messageIdToEdit = null
 let myUsername = null
 let myAvatarFilename = null
 let myUserJson = null
+let selectedMessageId = null
+let lastMessageIndex = 0
 
 // Упрощение работы с документом HTML DOM
 const $ = (selector) => {return document.querySelector(selector)};
@@ -79,6 +81,26 @@ $('.image-input').onchange = (event) => {
 $('.send-message-with-image-btn').onclick = () => {
     sendMessageWithImage()
 }
+$('.messages-container').addEventListener('contextmenu', (event) => {
+    selectedMessageId = findMessageContainerByCursor(event).getAttribute('message-id')
+})
+$('.delete-message-btn').onclick = () => {
+    deleteMessage(selectedMessageId)
+    hidePopup($('.message-options-unique-popup'))
+}
+$('.edit-message-btn').onclick = () => {
+    $all('.message-container').forEach((container) => {
+        let messageId = container.getAttribute('message-id');
+        if(messageId.toString() === selectedMessageId.toString()) {
+            const messageText = container.querySelector('.message-text').textContent
+            messageOperationType = 'edit';
+            $(".send-message-btn").textContent = 'Изменить';
+            messageIdToEdit = messageId
+            $('.message-text-input').value = messageText
+        }
+    })
+    hidePopup($('.message-options-unique-popup'))
+}
 function initializeAvatarOrDefault(avatarPath,avatarElement) {
     if(avatarPath !== null && avatarPath !== undefined && !avatarPath.includes('null')) {
         avatarElement.src = avatarPath
@@ -148,32 +170,25 @@ function showMessage(targetedMessageJson) {
 
     const singleMessageContainer = createEl('div', 'message-container');
     singleMessageContainer.setAttribute("message-id", messageId);
-
-    const deleteMessageBtn = createButtonWithText('Удалить', 'delete-message-btn');
-    deleteMessageBtn.onclick = () => {deleteMessage(messageId)}
+    lastMessageIndex += 1
+    singleMessageContainer.dataset.index = lastMessageIndex
 
     const messageText = createEl("p", "message-text");
     messageText.textContent = message;
 
-    const editMessageBtn = createButtonWithText('Изменить', 'edit-message-btn');
-    editMessageBtn.onclick = () => {
-        messageOperationType = 'edit';
-        $(".send-message-btn").textContent = 'Изменить';
-        messageIdToEdit = messageId
-        $('.message-text-input').value = message
-    }
     if(pinnedImageFilename !== null) {
         const pinnedImage = createEl('img','pinned-image-to-message')
         pinnedImage.src = '/pinned-images/' + pinnedImageFilename
         singleMessageContainer.append(pinnedImage)
     }
-    singleMessageContainer.append(messageText,deleteMessageBtn,editMessageBtn,messageTime);
+    singleMessageContainer.append(messageText,messageTime);
     if(messageTarget === 'CHAT_DELETE') {
         showDeletionRequestUI(singleMessageContainer)
     }
     allMessagesContainer.append(singleMessageContainer);
 }
 function showContact(contactJson) {
+    lastMessageIndex = 0
     console.log(contactJson)
     const contactName = contactJson['username']
     const contactAvatarName = contactJson['avatarName']
@@ -395,6 +410,42 @@ $all('.popup-overlay').forEach(popupOverlay => {
         hidePopup(popupOverlay)
     }
 });
+//unique popup works
+function findMessageContainerByCursor(event) {
+    event.preventDefault(); // Предотвращаем показ стандартного контекстного меню
+    const clickX = event.clientX + window.scrollX - 70;
+    const clickY = event.clientY + window.scrollY - 70;
+
+    const popupMenu = $('.message-options-unique-popup');
+    showPopup(popupMenu);
+
+    const popupMenuRect = popupMenu.getBoundingClientRect();
+
+    // Проверяем, чтобы позиция попапа не выходила за пределы экрана слева
+    if (clickX < 0) {
+        popupMenu.style.left = '0';
+    } else if (clickX + popupMenuRect.width > window.innerWidth) {
+        // Проверяем, чтобы позиция попапа не выходила за пределы экрана справа
+        popupMenu.style.left = `${window.innerWidth - popupMenuRect.width}px`;
+    } else {
+        popupMenu.style.left = `${clickX}px`;
+    }
+
+    // Проверяем, чтобы позиция попапа не выходила за пределы экрана сверху
+    if (clickY < 0) {
+        popupMenu.style.top = '0';
+    } else if (clickY + popupMenuRect.height > window.innerHeight) {
+        // Проверяем, чтобы позиция попапа не выходила за пределы экрана снизу
+        popupMenu.style.top = `${window.innerHeight - popupMenuRect.height}px`;
+    } else {
+        popupMenu.style.top = `${clickY}px`;
+    }
+
+    const clickedMessageContainer = event.target.closest(".message-container");
+    console.log(clickedMessageContainer);
+    console.log(clickedMessageContainer.getAttribute('message-id'));
+    return clickedMessageContainer;
+}
 //TEST
 function init_random_fake_contacts() {
     showContact('1')

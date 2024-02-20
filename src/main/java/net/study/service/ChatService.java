@@ -209,6 +209,7 @@ public class ChatService {
             if (message.getPinnedImageFilename() != null) {
                 imageStorageService.deleteImage(pinnedImagesFolderPath + "/" + message.getPinnedImageFilename());
             }
+            messageRepository.delete(message);
         });
         member1.getContactUsernameSet().remove(member2.getUsername());
         member2.getContactUsernameSet().remove(member1.getUsername());
