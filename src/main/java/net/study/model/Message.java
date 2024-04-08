@@ -1,6 +1,5 @@
 package net.study.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,11 +13,11 @@ import java.time.format.DateTimeFormatter;
 @Entity
 @Table(name = "messages")
 @NoArgsConstructor
-public @Data class Message {
+
+public @Data class Message implements Comparable<Message> {
     @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Id
-    @JsonIgnore
     private Long id;
     @Column(name = "message_text",columnDefinition = "MEDIUMTEXT")
     private String messageText;
@@ -31,6 +30,13 @@ public @Data class Message {
     private MessageTarget target;
     private Long targetId;
     private String pinnedImageFilename;
+    @ManyToOne(cascade = CascadeType.DETACH)
+    private User forwarder;
+    @ManyToOne(cascade = CascadeType.DETACH)
+    private Message originalMessageWeReplied;
+    @Enumerated(EnumType.STRING)
+    private OriginalMessageStatus originalMessageStatus = OriginalMessageStatus.NOT_EXISTS;
+
     public Message(String messageText, User sender, User receiver) {
         this.messageText = messageText;
         this.sender = sender;
@@ -45,6 +51,10 @@ public @Data class Message {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
         String formattedDate = now.format(formatter);
         dateTime = isChanged ? "изм. " + formattedDate : formattedDate;
+    }
+    @Override
+    public int compareTo(Message message) {
+        return message.getId().compareTo(this.id);
     }
 
 }

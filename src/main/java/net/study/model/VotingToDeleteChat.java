@@ -11,15 +11,15 @@ import java.util.Set;
 @NoArgsConstructor
 public @Data class VotingToDeleteChat {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
     private Long confirmVotesAmount;
     private Long declineVotesAmount;
     @ElementCollection
     private Set<String> votedUsernames;
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.DETACH)
     private User member1;
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.DETACH)
     private User member2;
     public VotingToDeleteChat(User member1, User member2) {
         confirmVotesAmount = 0L;

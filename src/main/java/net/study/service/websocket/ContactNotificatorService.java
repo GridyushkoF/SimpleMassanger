@@ -1,7 +1,7 @@
 package net.study.service.websocket;
 
 import lombok.RequiredArgsConstructor;
-import net.study.service.UserService;
+import net.study.service.MyUserDataStorageService;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
@@ -9,11 +9,11 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-public class ContactNotificator {
+public class ContactNotificatorService {
     private final SimpMessagingTemplate messagingTemplate;
-    private final UserService userService;
+    private final MyUserDataStorageService myUserData;
     public void updateContacts (String username) {
-        String myUsername = userService.getMyUsername();
+        String myUsername = myUserData.getMyUsername();
         if(!myUsername.equals(username)) {
             messagingTemplate.convertAndSendToUser(myUsername,"/topic/private-messages",Map.of("need_contacts_update","true"));
         }

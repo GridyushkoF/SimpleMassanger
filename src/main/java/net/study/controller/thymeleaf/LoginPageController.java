@@ -16,4 +16,8 @@ public class LoginPageController {
         model.addAttribute("logout", logout != null);
         return "sign-in-page";
     }
+    @RequestMapping("/")
+    public String redirectRootToMain () {
+        return "redirect:/main";
+    }
 }

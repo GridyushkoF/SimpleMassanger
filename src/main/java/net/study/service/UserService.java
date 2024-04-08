@@ -1,42 +1,52 @@
 package net.study.service;
 
+import lombok.RequiredArgsConstructor;
 import net.study.model.user.User;
-import net.study.repository.MessageRepository;
 import net.study.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import net.study.service.websocket.ContactNotificatorService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
-    private final MessageRepository messageRepository;
-    @Autowired
-    public UserService(PasswordEncoder passwordEncoder, UserRepository userRepository, MessageRepository messageRepository) {
-        this.passwordEncoder = passwordEncoder;
-        this.userRepository = userRepository;
-        this.messageRepository = messageRepository;
-    }
+    private final ContactNotificatorService contactNotificator;
+    private final MyUserDataStorageService myUserData;
     public void encryptPasswordAndSaveNewUser(User user) {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
     }
-    public Optional<User> getMyUserOptional() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String myUsername = authentication.getName();
-        return userRepository.findByUsername(myUsername);
+    public Optional<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
     }
-    public String getMyUsername () {
-        Optional<User> myUserOptional = getMyUserOptional();
-        if(myUserOptional.isPresent()) {
-            return  myUserOptional.get().getUsername();
+
+    public ResponseEntity<Map<String,String>> addContactToMyContactsList(String contactName) {
+
+        Optional<User> userToAddOptional = userRepository.findByUsername(contactName);
+
+        if (userToAddOptional.isPresent()) {
+            User myUser = myUserData.getMyUser();
+            User userToAdd = userToAddOptional.get();
+            if(myUser.getId().equals(userToAdd.getId())) {
+                myUser.getContactUsernameSet().add(userToAdd.getUsername());
+                userRepository.save(myUser);
+                return ResponseEntity.ok(Map.of("is_successfully_added","true"));
+            }
+            myUser.getContactUsernameSet().add(userToAdd.getUsername());
+            userToAdd.getContactUsernameSet().add(myUser.getUsername());
+            userRepository.save(myUser);
+            userRepository.save(userToAdd);
+            contactNotificator.updateContacts(userToAdd.getUsername());
+
+            return ResponseEntity.ok(Map.of("is_successfully_added", "true"));
         }
-        throw new IllegalArgumentException("Your account does not exists");
+        return ResponseEntity.ok(Map.of("is_successfully_added", "false"));
     }
 
 }

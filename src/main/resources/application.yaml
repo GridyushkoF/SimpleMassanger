@@ -1,24 +1,35 @@
 spring:
+  servlet:
+    multipart:
+      max-file-size: 100MB
+      max-request-size: 100MB
   datasource:
     username: ${DB_LOGIN}
     password: ${DB_PASSWORD}
-    url: jdbc:mysql://localhost:3306/qbyx_database
+    url: jdbc:mysql://localhost:3306/qbyx_database?autoReconnect=true&rewriteBatchedStatements=true
   jpa:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
+        jdbc:
+          batch_size: 100
+        order_inserts: true
+        order_updates: true
+        batch_versioned_data: true
     hibernate:
-      ddl-auto: create
+      ddl-auto: none
     show-sql: false
   web:
     resources:
-      cache:
-        cachecontrol:
-          no-cache: true
       static-locations: classpath:/
   main:
     lazy-initialization: false
 server:
   port: 8081
-avatars-path: C:/Users/Zver/IdeaProjects/SocialNetwork/avatars
-pinned-images-path: C:/Users/Zver/IdeaProjects/SocialNetwork/pinned_images
+avatars-path: ${AVATARS_PATH}
+pinned-images-path: ${PINNED_IMAGES_PATH}
+pagination:
+  messages:
+    page-size: 30
+
+

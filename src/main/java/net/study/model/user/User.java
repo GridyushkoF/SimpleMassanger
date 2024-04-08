@@ -3,16 +3,20 @@ package net.study.model.user;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.NonNull;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
 @Entity
-@Table(name = "users")
-public @Data class User {
+@Table(name = "users", indexes = {
+        @Index(name = "username_FK", columnList = "name")
+})
+public @Data class User implements Comparable<User> {
     @Column(name = "id")
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
     @Column(name = "name")
     private String username;
@@ -24,7 +28,26 @@ public @Data class User {
     @JsonProperty(namespace = "role_list")
     private List<Role> roleList;
     @JsonProperty(namespace = "contact_list")
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     private Set<String> contactUsernameSet;
+    private String description;
+    private LocalDateTime creationDateTime;
+
+    public User(String username, String password, String avatarName, List<Role> roleList, Set<String> contactUsernameSet, String description) {
+        this.username = username;
+        this.password = password;
+        this.avatarName = avatarName;
+        this.roleList = roleList;
+        this.contactUsernameSet = contactUsernameSet;
+        this.description = description;
+        this.creationDateTime = LocalDateTime.now();
+    }
+    public User () {
+        this.creationDateTime = LocalDateTime.now();
+    }
+    @Override
+    public int compareTo(@NonNull User user) {
+        return this.creationDateTime.compareTo(user.creationDateTime);
+    }
 }
 

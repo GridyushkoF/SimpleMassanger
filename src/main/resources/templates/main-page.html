@@ -2,41 +2,81 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Hello WS</title>
+    <title>MAIN</title>
     <link rel="stylesheet" href="/static/styles/main.css">
-    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js" integrity="sha384-Gr6Lu2Ajx28mzwyVR8CFkULdCU7kMlZ9UthllibdOSo6qAiN+yXNHqtgdTvFXMT4" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/webjars/stomp-websocket/2.3.4/stomp.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
-    <script src="/static/js/main.js" defer></script>
-    <script src="/static/js/messages-selection-system.js" defer></script>
+    <script src="/static/js/other-libraries/socket-io.js" defer></script>
+    <script src="/static/js/other-libraries/howler.js" defer></script>
+    <script src="/static/js/other-libraries/stomp.js" defer></script>
+    <script src="/static/js/other-libraries/sock.js" defer></script>
+    <script src="/static/js/other-libraries/dragula.min.js" defer></script>
+    <script src="/static/js/other-libraries/dragscroll.js" defer></script>
+
+    <script src="/static/js/main-js-split/dom-utils.js" defer></script>
+    <script src="/static/js/main-js-split/ajax.js" defer></script>
+    <script src="/static/js/initializr.js" defer></script>
+    <script src="/static/js/main-js-split/global-variables.js" defer></script>
+    <script src="/static/js/main-js-split/event-listeners.js" defer></script>
+    <script src="/static/js/main-js-split/templating.js" defer></script>
+    <script src="/static/js/main-js-split/template-popups.js" defer></script>
+    <script src="/static/js/main-js-split/selection-and-search.js" defer></script>
+    <script src ="/static/js/main-js-split/design-functions.js" defer></script>
+
+
 </head>
 <body>
     <div class="main-menu">
         <header>
-            <button class="show-profile-popup-btn">Профиль</button>
+            <div class="header-main">
+                <button class="default-btn show-profile-popup-btn">
+                    <img class="decorative-profile-img" src="/static/img/contacts.png" alt="">
+                    <p>Профиль</p>
+                </button>
+            </div>
         </header>
         <div class="search-menu">
             <label>
-                <input class="search-query-input" type="text" placeholder="Введите имя пользователя">
+                <input  class="search-query-input" type="text" placeholder="Введите имя пользователя">
             </label>
-            <button onclick="searchContactByUsername()" class="start-search-by-name-btn">Найти</button>
+            <button
+                     class="start-search-by-name-btn">
+<!--                <img class="search-img" src="/static/img/search.png" alt="Картинка поиска(кнопка справа)">-->
+                <p class="search-text">Найти</p>
+            </button>
         </div>
-        <div class="contacts-container">
-
-        </div>
-        <div class="chat-menu">
-            <div class="messages-container">
-
+        <div class="massager-main">
+            <div class="scrollable contacts-container">
+                <p class="my-contacts-text">Мои контакты:</p>
             </div>
-            <div class="chat-controllers-menu">
-                <p>Отправка сообщения</p>
-                <label>
-                    <input type="text" class="message-text-input">
-                </label>
-                <button class="send-message-btn">Отправить</button>
-                <button class="pin-image-btn">Прикрепить</button>
-            </div>
+            <p class="contact-not-selected-alert">
+                Выделите чат, чтобы отправлять сообщения
+            </p>
+            <div class="chat-menu disabled">
+                <div class="scrollable chat-space">
+                    <div class="messages-container">
+
+                    </div>
+                </div>
+
+                <div class="chat-controllers-menu">
+                    <p class="sending-message-text">Отправка сообщения</p>
+                    <div class="send-message-container">
+                        <p class="replying-message-text"></p>
+                        <div class="send-message-container-main">
+                            <label>
+                                <textarea class="message-text-area" placeholder="Введите сообщение"></textarea>
+                            </label>
+                            <button class="send-message-btn">
+                                <img class="send-message-img" src="/static/img/send_msg.png" alt="Отправить сообщение">
+                            </button>
+                            <button class="pin-image-btn">
+                                <img class="clip-file-img" src="/static/img/clip.png" alt="">
+                            </button>
+                        </div>
+                    </div>
+                </div>
         </div>
+    </div>
+
     </div>
     <div class="template-popups">
         <div class="popup-overlay delete-contact-overlay disabled">
@@ -59,17 +99,32 @@
         <div class="popup-overlay profile-overlay disabled">
             <div class="popup-menu profile-menu">
                 <button class="exit-popup-btn">X</button>
-                <img src="/static/avatars/noImage.png" class="my-profile-avatar">
-                <label>
-                    <input class="update-profile-avatar-input" type="file" accept="image/*">
-                </label>
-                <button class="update-profile-avatar-btn">Сохранить</button>
+                <div class="wrap avatar-container">
+
+                    <label class="update-profile-avatar-label" for="update-profile-avatar-input">
+                        <img src="/static/avatars/noImage.png" class="avatar loadable" alt="my avatar/upload image">
+<!--                        <img class="upload-file-img" src="/static/img/upload.png" alt="Загрузить файл для аватарки">-->
+<!--                        <p class="upload-file-text">Загрузить файл</p>-->
+                        <input id="update-profile-avatar-input" class="update-profile-avatar-input" type="file" accept="image/*">
+                    </label>
+                    <button class="update-profile-avatar-btn">Сохранить аватарку</button>
+                </div>
+                <div class="wrap description-container">
+                    <textarea class="scrollable description-textarea" placeholder="Введите описание"></textarea>
+                    <button class="update-description-btn">Сохранить описание</button>
+                </div>
+
+
             </div>
         </div>
         <div class="popup-overlay pin-image-overlay disabled">
             <div class="popup-menu pin-image-menu">
-                <button class="exit-popup-btn">X</button>
-                <input class="image-input" type="file" accept="image/*">
+                <button class="exit-popup-btn content-delete-after-exit">X</button>
+
+                <label for="image-input" class="choose-image-to-pin-label">
+                    <input id="image-input" class="image-input" type="file" accept="image/*">
+                </label>
+
                 <img class="pinned-image">
                 <label>
                     <input class="caption-input" type="text" placeholder="Подпись">
@@ -77,17 +132,53 @@
                 <button class="send-message-with-image-btn">Отправить</button>
             </div>
         </div>
+        <div class="popup-overlay forward-message-overlay disabled">
+            <div class="popup-menu forward-message-menu">
+                <button class="exit-popup-btn">X</button>
+                <div class="contacts-to-forwarding">
+
+                </div>
+                <button class="forward-message-to-contacts-btn">Переслать</button>
+            </div>
+        </div>
+        <div class="popup-overlay full-image-view-overlay disabled">
+            <div class="free dragscroll popup-menu full-image-view-menu">
+                <div class="fixed-menu">
+                    <button class="exit-popup-btn">X</button>
+                    <p>Картинка в полном масштабе:</p>
+                </div>
+                <img class="full-image-view-img" src="" alt="">
+            </div>
+        </div>
+        <div class="popup-overlay found-users-overlay disabled">
+            <div class="popup-menu found-users-menu">
+                <button class="exit-popup-btn">X</button>
+                <div class="found-users-unique-popup">
+                    <h3>Найдено по вашему запросу:</h3>
+                    <div class="found-user-info">
+                        <img class="avatar found-user-avatar" src="" alt="">
+                        <div class="found-user-text-info">
+                            <p class="found-user-username"></p>
+                            <p class="found-user-description">
+                            </p>
+                        </div>
+                        <button class="add-user-to-contacts-btn">
+                            <img class="add-to-contacts-img" src="/static/img/addContact.png" alt="add to contacts">
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
     <div class="unique-popups">
         <div class="message-options-unique-popup disabled">
-            <button class="exit-popup-btn">X</button>
+            <button class="exit-message-options-btn">X</button>
             <button class="delete-message-btn">Удалить</button>
             <button class="edit-message-btn">Изменить</button>
-
+            <button class="activate-message-forwarding-btn">Переслать</button>
+            <button class ="reply-to-message-btn">Ответить</button>
         </div>
-    </div>
-    <div class="message-options-popup disabled">
-
     </div>
 </body>
 </html>

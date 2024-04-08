@@ -1,93 +1,33 @@
 package net.study.controller.rest;
 
+import lombok.RequiredArgsConstructor;
 import net.study.model.user.User;
-import net.study.repository.UserRepository;
+import net.study.service.MyUserDataStorageService;
 import net.study.service.UserService;
-import net.study.service.websocket.ContactNotificator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @RestController
+@RequiredArgsConstructor
 public class UserController {
-    private final UserRepository userRepository;
     private final UserService userService;
-    private final ContactNotificator contactNotificator;
-
-    @Autowired
-    public UserController(UserRepository userRepository, UserService userService, ContactNotificator contactNotificator) {
-        this.userRepository = userRepository;
-        this.userService = userService;
-        this.contactNotificator = contactNotificator;
-
-    }
+    private final MyUserDataStorageService myUserData;
 
     @GetMapping("/add-user-to-my-contacts/{username}")
     public ResponseEntity<Map<String, String>> addUserToContactList(@PathVariable String username) {
-        Optional<User> myUserOptional = userService.getMyUserOptional();
-        Optional<User> userToAddOptional = userRepository.findByUsername(username);
-
-        if (myUserOptional.isPresent() && userToAddOptional.isPresent()) {
-            User myUser = myUserOptional.get();
-            User userToAdd = userToAddOptional.get();
-
-            // Check if myUser already has userToAdd in contacts
-            if (
-                    myUser.getContactUsernameSet().stream().anyMatch(contact -> contact.equals(userToAdd.getUsername()))
-                                                ||
-                    userToAdd.getContactUsernameSet().stream().anyMatch(contact -> contact.equals(myUser.getUsername()))
-            ) {
-                return ResponseEntity.badRequest().body(Map.of("is_successfully_added", "false"));
-            }
-            if(myUser.getId().equals(userToAdd.getId())) {
-                myUser.getContactUsernameSet().add(userToAdd.getUsername());
-                userRepository.save(myUser);
-                return ResponseEntity.ok(Map.of("is_successfully_added","true"));
-            }
-            myUser.getContactUsernameSet().add(userToAdd.getUsername());
-            userToAdd.getContactUsernameSet().add(myUser.getUsername());
-            userRepository.save(myUser);
-            userRepository.save(userToAdd);
-            contactNotificator.updateContacts(userToAdd.getUsername());
-
-            return ResponseEntity.ok(Map.of("is_successfully_added", "true"));
-        }
-
-        return ResponseEntity.badRequest().body(Map.of("is_successfully_added", "false"));
+        return userService.addContactToMyContactsList(username);
     }
     @GetMapping("/get-my-contacts")
     public ResponseEntity<Map<String, Set<User>>> getMyUserContactList() {
-        Optional<User> myUserOptional = userService.getMyUserOptional();
-        if(myUserOptional.isPresent()) {
-            User myUser = myUserOptional.get();
-            Set<User> contactSet = myUser.getContactUsernameSet()
-                    .stream()
-                    .map(userRepository::findByUsername)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .collect(Collectors.toSet());
-            return ResponseEntity.ok(Map.of("my_user_contacts", contactSet));
-        }
-        return ResponseEntity.badRequest().body(null);
-    }
-    @GetMapping("/get-my-username")
-    public ResponseEntity<Map<String,String>> getMyUsername() {
-        try {
-            return ResponseEntity.ok(Map.of("my_username",userService.getMyUsername()));
-        }catch (Exception e) {
-            e.printStackTrace();
-        }
-        return ResponseEntity.badRequest().body(null);
+        return ResponseEntity.ok(Map.of("my_user_contacts",myUserData.getMyUserContacts()));
     }
     @GetMapping("/get-my-user")
     public ResponseEntity<Map<String,User>> getMyUser() {
-        return ResponseEntity.ok(Map.of("my_user",userRepository.findByUsername(userService.getMyUsername()).get()));
+        return ResponseEntity.ok(Map.of("my_user",userService.findByUsername(myUserData.getMyUsername()).orElseGet(User::new)));
     }
 }
