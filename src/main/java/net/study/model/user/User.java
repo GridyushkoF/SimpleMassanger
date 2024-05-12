@@ -42,7 +42,7 @@ public @Data class User implements Comparable<User> {
         this.description = description;
         this.creationDateTime = LocalDateTime.now();
     }
-    public User () {
+    public User() {
         this.creationDateTime = LocalDateTime.now();
     }
     @Override

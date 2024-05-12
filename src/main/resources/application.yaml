@@ -25,7 +25,7 @@ spring:
   main:
     lazy-initialization: false
 server:
-  port: 8081
+  port: 9000
 avatars-path: ${AVATARS_PATH}
 pinned-images-path: ${PINNED_IMAGES_PATH}
 pagination:

@@ -87,6 +87,17 @@
     align-items: center;
     justify-content: left;
 }
+.contacts-main {
+    display: flex;
+    flex-direction: column;
+    margin-left: 10px;
+    text-align: center;
+    align-items: flex-start;
+    transition: 0.4s ease-in-out;
+    align-content: start;
+    flex-wrap: nowrap;
+    width: 100%;
+}
 .delete-contact-img {
     width: 20px;
     height: 20px;
@@ -352,6 +363,19 @@ message-container-design
     font-size: 10px;
     opacity: 50%;
 }
+.message-date {
+    text-align: center;
+    background-color: #141414;
+    padding: 10px;
+    border-radius: 5px;
+    align-self: center;
+}
+.message-date-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
 .message-text {
     margin: 2px;
     word-wrap: break-word;
@@ -390,9 +414,8 @@ pinned-images-design
 .choose-image-to-pin-label::before {
     content: "Загрузить";
 }
-.full-image-view-img {
-    cursor: pointer;
-}
+
+
 .fixed-menu {
     position: fixed;
 }
@@ -400,6 +423,10 @@ pinned-images-design
     width: 95%;
     height: 95%;
     overflow: hidden;
+}
+
+.full-image-view-img {
+    cursor: grab;
 }
 /*
 send-message-design
@@ -566,4 +593,34 @@ unread-messages
 }
 .avatar.loadable {
     cursor: pointer;
+}
+.tick {
+    width: 30px;
+    height: 30px;
+    margin: 5px;
+}
+/*
+dragula
+*/
+.gu-mirror {
+    position: fixed !important;
+    margin: 0 !important;
+    z-index: 9999 !important;
+    opacity: 0.8;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=80)";
+    filter: alpha(opacity=80);
+}
+.gu-hide {
+    display: none !important;
+}
+.gu-unselectable {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+}
+.gu-transit {
+    opacity: 0.2;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=20)";
+    filter: alpha(opacity=20);
 }

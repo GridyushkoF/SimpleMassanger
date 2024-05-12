@@ -34,8 +34,8 @@ public class SecurityConfig {
                                 .permitAll()
                                 .requestMatchers("/**").authenticated())
                 .formLogin(form -> form
-                        .loginPage("/sign-in-page") // Указываем URL для страницы входа
-                        .permitAll()) // Разрешаем всем доступ к странице входа
+                        .loginPage("/sign-in-page")
+                        .permitAll())
                 .build();
     }
 

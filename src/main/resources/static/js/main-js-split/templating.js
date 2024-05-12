@@ -47,7 +47,9 @@ function showContact(contactJson, containerToAppend, shouldUpdateMessageHistory 
         event.stopPropagation()
         showElement($('.delete-contact-overlay'))
     }
-    setAvatarPathOrDefault('/avatars/' + contactAvatarName, contactAvatarImg)
+
+    setAvatarPathIfExistsOrDefaultAvatar('/avatars/' + contactAvatarName, contactAvatarImg,contactName)
+
     scaleImageOnClick(contactAvatarImg);
     hoverContactDeletionBtnOnClick(singleContactContainer)
 
@@ -103,7 +105,7 @@ function showMessage(targetedMessageJson,conditionalInsertContainer = null,inser
         originalMessageWeReplied: originalMessageWeReplied,
         originalMessageStatus: originalMessageStatus
     } = targetedMessageJson;
-    $log('showMessage: \n\toriginalMessageStatus='+originalMessageStatus)
+
     if (shouldNotLoadMessageHistory(sender, selectedContactName)) {
         initUnreadMessagesAmount(sender);
         return;
@@ -123,15 +125,16 @@ function showMessage(targetedMessageJson,conditionalInsertContainer = null,inser
     const messageText = $create("p", "message-text");
     messageText.textContent = message;
 
+
     if (pinnedImageFilename !== null) {
         $log('CREATING IMAGE!')
-        addPinnedImageToMessage(pinnedImageFilename, singleMessageContainer);
+        addPinnedImageToMessage(pinnedImageFilename, singleMessageContainer).onload = () => {
+            scrollToBottom($('.chat-space'))
+        };
     }
-    $log('IMAGE CREATED!')
     if (forwarder !== null) {
         createForwardedByContainer(forwarder.username, singleMessageContainer)
     }
-    $error('ORIGINAL MESSAGE WE REPLIED: ' + JSON.stringify(originalMessageWeReplied))
     singleMessageContainer.append(messageText, messageTime);
     createReplyContainer(originalMessageWeReplied, singleMessageContainer,originalMessageStatus)
     if (messageTarget === 'CHAT_DELETE') {
@@ -141,7 +144,7 @@ function showMessage(targetedMessageJson,conditionalInsertContainer = null,inser
     singleMessageContainer.classList.add(sender.username === myUsername ? 'right' : 'left')
 
     appendByInsertMode(insertMode, singleMessageContainer, conditionalInsertContainer);
-
+    createDateElementIfNeed(dateTime,singleMessageContainer)
     scrollToBottom($('.chat-space'))
 }
 function showLastMessage(messageTarget, message, sender, receiver) {
@@ -273,9 +276,35 @@ function createMessageTimeElement(dateTime) {
 }
 function extractMessageTimeFromDateTime(dateTime) {
     const isDateModified = dateTime.includes('изм. ');
-    //NOT CHANGED:(INDEX1-DATE),(INDEX2-TIME);//CHANGED(INDEX1-изм.),(INDEX2-DATE),(INDEX3-TIME)
+    //NOT CHANGED:(INDEX0-DATE),(INDEX1-TIME);//CHANGED(INDEX0-изм.),(INDEX1-DATE),(INDEX2-TIME)
+    const timePartIndex = isDateModified ? 2 : 1;
+    return dateTime.split(' ')[timePartIndex]
+}
+function extractMessageDateFromDateTime(dateTime) {
+    const isDateModified = dateTime.includes('изм. ');
+    //NOT CHANGED:(INDEX0-DATE),(INDEX1-TIME);//CHANGED(INDEX0-изм.),(INDEX1-DATE),(INDEX2-TIME)
     const datePartIndex = isDateModified ? 1 : 0;
-    return dateTime.split(' ')[datePartIndex + 1]
+    return dateTime.split(' ')[datePartIndex]
+}
+function createDateElementIfNeed(dateTime, singleMessageContainer) {
+    const messageId = singleMessageContainer.getAttribute('message-id');
+    const currentMessageDate = extractMessageDateFromDateTime(dateTime);
+    console.log(currentMessageDate + '/' + lastMessageDate + ', ' + 'id = ' + messageId)
+
+    if (lastMessageDate !== currentMessageDate || messageId === currentChatFirstMessageId.toString()) {
+        if (lastMessageDate !== currentMessageDate) {
+            console.error('adding-date-time: different dates');
+        } else if (messageId === currentChatFirstMessageId.toString()) {
+            console.error('adding-date-time: ids');
+        }
+
+        const messageDate = $create('p', 'message-date');
+        const messageDateContainer = $create('div', 'message-date-container');
+        messageDate.textContent = currentMessageDate.toString();
+        messageDateContainer.append(messageDate);
+        singleMessageContainer.insertAdjacentElement('beforebegin', messageDateContainer);
+        lastMessageDate = currentMessageDate;
+    }
 }
 function updateExistingMessage(messageContainer, message, dateTime) {
     let messageText = messageContainer.$('.message-text');
@@ -324,16 +353,15 @@ function compressImage(img, maxWidth, maxHeight) {
 function addPinnedImageToMessage(pinnedImageFilename, singleMessageContainer) {
     const pinnedImage = $create('img', 'pinned-image-to-message');
 
-    // Изображение загружено, можно сжимать и добавлять в контейнер
     pinnedImage.src = compressImage(pinnedImage, maxPinnedImageWidth, maxPinnedImageHeight);
     singleMessageContainer.append(pinnedImage);
 
     pinnedImage.src = '/pinned-images/' + pinnedImageFilename;
     pinnedImage.setAttribute('file-download-link','/pinned-images/' + pinnedImageFilename);
     scalePinnedImageOnClick(pinnedImage);
+    return pinnedImage
 }
 function scrollToMessageById(messageId, shouldHighlight = true, scrollBehavior = 'smooth') {
-    $log('MESSAGE_ID: ' + messageId)
     if(messageId < 0) {
         return
     }
@@ -353,13 +381,9 @@ function scrollToMessageById(messageId, shouldHighlight = true, scrollBehavior =
 
 }
 function insertMessagesJsonAtBeginOfMessagesContainer(allMessagesJson) {
-    allMessagesJson.forEach((messageJson, index) => {
-        if (index === 0) {
-            showMessage(messageJson, null, 'begin')
-        } else {
-            let prevMessageContainer = getMessageContainerById(allMessagesJson[index - 1]['targetId'])
-            showMessage(messageJson, prevMessageContainer, 'afterContainer')
-        }
+    const reversedMessageHistory = allMessagesJson.reverse();
+    reversedMessageHistory.forEach(messageJson => {
+        showMessage(messageJson,null,'begin')
     })
 }
 function insertMessagesJsonAtEndOfMessagesContainer(allMessagesJson) {
@@ -369,8 +393,8 @@ function insertMessagesJsonAtEndOfMessagesContainer(allMessagesJson) {
 }
 //-------------foundUsers-----------
 function showFoundUser(foundUserJson) {
-    $('.found-user-avatar').src = foundUserJson['avatarName'] != null ? ('/avatars/' + foundUserJson['avatarName']) : ('/static/img/noImage.png')
     $('.found-user-username').textContent = '@' + foundUserJson['username']
+    setAvatarPathIfExistsOrDefaultAvatar('/avatars/' + foundUserJson['avatarName'],$('.found-user-avatar'), foundUserJson['username'])
     $('.found-user-info').setAttribute('username',foundUserJson['username'])
     const descriptionElement = $('.found-user-description')
     if(descriptionElement) {

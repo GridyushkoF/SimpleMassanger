@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import net.study.service.MyUserDataStorageService;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
@@ -12,6 +14,7 @@ import java.util.Map;
 public class ContactNotificatorService {
     private final SimpMessagingTemplate messagingTemplate;
     private final MyUserDataStorageService myUserData;
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateContacts (String username) {
         String myUsername = myUserData.getMyUsername();
         if(!myUsername.equals(username)) {

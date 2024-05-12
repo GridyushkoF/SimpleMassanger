@@ -98,7 +98,7 @@ public class ChatDeletionService {
         votingRepository.delete(voting);
     }
     public void deleteChat(User member1, User member2) {
-        List<Message> allMessagesInThisChat = messageRepository.findAllByMembers(member1, member2, Pageable.unpaged());
+        List<Message> allMessagesInThisChat = messageRepository.findAllByMembersDesc(member1, member2, Pageable.unpaged());
         chatClearingNotificator.notifyUserAboutClearing(member2.getUsername());
         if(!member1.getUsername().equals(member2.getUsername())) {
             chatClearingNotificator.notifyUserAboutClearing(member1.getUsername());

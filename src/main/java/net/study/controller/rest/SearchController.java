@@ -18,7 +18,7 @@ public class SearchController {
     private final SearchService searchService;
 
     @GetMapping("/users/{username}")
-    public ResponseEntity<Map<String,User>> findContactsByUsername(@PathVariable String username) {
+    public ResponseEntity<Map<String, User>> findContactsByUsername(@PathVariable String username) {
         Optional<User> userOptional = searchService.findByUsername(username);
         if (userOptional.isPresent() && username != null) {
             User user = userOptional.get();

@@ -26,7 +26,7 @@ public class MessageNotificatorService {
     public void notifyUserByBatch(String username, List<TargetedMessageDto> operationsBatch) {
         String myUserName = myUserData.getMyUsername();
         if(!myUserName.equals(username)) {
-            messagingTemplate.convertAndSendToUser(myUserName,"/topic/private-messages",operationsBatch);
+            messagingTemplate.convertAndSendToUser(myUserName,"/topic/private-messages",Map.of("operations_batch",operationsBatch));
         }
         messagingTemplate.convertAndSendToUser(username,"/topic/private-messages", Map.of("operations_batch",operationsBatch));
     }

@@ -29,14 +29,23 @@ function lockMessageHistoryUpdatesByScroll() {
 function unlockMessageHistoryUpdatesByScroll() {
     shouldUpdateMessageHistoryOnScroll = true
 }
+function setCurrentFirstMessageId(shouldResetPageNumber) {
+    if (shouldResetPageNumber) {
+        getFirstMessageInCurrentChat()
+            .then(result => {
+                const id = result['first-message-id']
+                if (id) {
+                    currentChatFirstMessageId = id;
+                }
+            })
+    }
+}
 function getMessageHistory(shouldResetPageNumber = false,messageIdBeforeWhichLoad = null) {
-    $error('запущен процесс получения истории сообщений, ' + ((shouldResetPageNumber) ? 'с очисткой' : 'без очистки') + ', ' + ((!shouldResetPageNumber) ? (' с пагинацией в размере 30 элементов') : (' без пагинации')))
-
+    setCurrentFirstMessageId(shouldResetPageNumber);
     if (shouldResetPageNumber) {
         $(".messages-container").innerHTML = ''
         lockMessageHistoryUpdatesByScroll()
     }
-
     return fetch("/get-message-history/" + selectedContactName +  "?" + new URLSearchParams({
         shouldResetPageNumber : shouldResetPageNumber,
         messageIdBeforeWhichLoad: messageIdBeforeWhichLoad
@@ -45,12 +54,14 @@ function getMessageHistory(shouldResetPageNumber = false,messageIdBeforeWhichLoa
         .then(result => {
             const allMessagesJson = result['message_history'];
             if(!shouldResetPageNumber) {
+                console.error("----------loading pages by pagination----------")
                 insertMessagesJsonAtBeginOfMessagesContainer(allMessagesJson);
+
                 const allMessageContainers = $all('.message-container')
+                if(allMessagesJson.length !== 0)
                 scrollToMessageById(allMessageContainers[27].getAttribute('message-id'),false,'auto')
+
             } else {
-                $error('message history and pagination page cleaned!')
-                $error($all('.message-container').length)
                 insertMessagesJsonAtEndOfMessagesContainer(allMessagesJson);
             }
         })
@@ -60,6 +71,11 @@ function getMessageHistory(shouldResetPageNumber = false,messageIdBeforeWhichLoa
             }
             unlockMessageHistoryUpdatesByScroll()
         })
+}
+function getFirstMessageInCurrentChat() {
+    return fetch('/get-first-message/' + selectedContactName)
+        .then(response => response.json())
+
 }
 function deleteAllMessages(messageIdList) {
     let messageIdsData = {"messageIdList": messageIdList}
@@ -123,7 +139,9 @@ function initializeMyUser() {
             myUserJson = myUser['my_user'];
             myUsername = myUserJson['username']
             myAvatarFilename = myUserJson['avatarName']
-            setAvatarPathOrDefault('/avatars/' + myAvatarFilename, $('.avatar'))
+            console.log('your username: ' + myUsername)
+            setAvatarPathIfExistsOrDefaultAvatar('/avatars/' + myAvatarFilename, $('.my-avatar'))
+            $('.update-username-input').value = myUsername
             console.log('myUserDescription: ' + myUserJson['description'])
             $('.description-textarea').value = myUserJson['description']
         })
@@ -141,9 +159,9 @@ function sendNewAvatar() {
         method: 'POST',
         body: formData
     }).then(response => response.json())
-        .then(r => {
-            myAvatarFilename = '/avatars/' + r['avatar_path']
-            setAvatarPathOrDefault(myAvatarFilename, $('.my-profile-avatar'))
+        .then(json => {
+            myAvatarFilename = '/avatars/' + json['avatar_path']
+            setAvatarPathIfExistsOrDefaultAvatar(myAvatarFilename, $('.my-avatar'))
         })
         .catch(e => console.log(e));
 }
@@ -209,14 +227,14 @@ function addUserToMyContactList() {
         })
 }
 function connectToWebSocket() {
-
-    let socket = new SockJS('/messages');
-    stompClient = Stomp.over(socket);
+    const socketJs = new SockJS('/messages');
+    stompClient = Stomp.over(socketJs);
     stompClient.connect({}, function (frame) {
         console.log('Connected: ' + frame);
         stompClient.subscribe('/user/topic/private-messages', function (message) {
             let messageJson = JSON.parse(message.body)
-            if(messageJson['operations_batch'] !== null && messageJson['operations_batch'] !== undefined) {
+            console.log("Получено новое сообщение, цель - " + messageJson['target'])
+            if(messageJson['operations_batch']) {
                 sound.play(1,false)
                 const batch = messageJson['operations_batch']
                 batch.forEach(message => {
@@ -228,23 +246,35 @@ function connectToWebSocket() {
                 if(messageJson.sender.username !== myUsername && messageJson.target === 'CREATE') {
                     sound.play(1,false)
                 }
-            } else {
-                hideElement($('.chat-menu'))
-                showElement($('.contact-not-selected-alert'))
-                return
             }
-
             showMessage(messageJson);
         });
         stompClient.subscribe('/user/topic/contacts', () => {
-            $log('UPDATE_CONTACTS_REQUEST!')
             updateContacts()
         })
         stompClient.subscribe('/user/topic/chat-clearing', () => {
-            $log('CHAT_CLEANING_REQUEST!')
             $all('.message-container').forEach(container => container.remove())
             hideElement($('.chat-menu'))
             showElement($('.contact-not-selected-alert'))
         })
     });
+}
+function updateUsernameAndContacts() {
+    let newUsername = $('.update-username-input').value
+    fetch('/update-my-username/' + newUsername)
+        .then(response => response.json())
+        .then(result => {
+            alert(result['is_successful_updated'] ? "Успешно обновлено" : "Такое имя пользователя уже присутствует, выберите другое")
+            if(result['is_successful_updated']) {
+                myUsername = $('.update-username-input').value
+                updateContacts()
+                if(myAvatarFilename === null) {
+                    setAvatarPathIfExistsOrDefaultAvatar('/avatars/null',$('.my-avatar'))
+                }
+
+                connectToWebSocket()
+            }
+        }).then(() => {
+
+    })
 }

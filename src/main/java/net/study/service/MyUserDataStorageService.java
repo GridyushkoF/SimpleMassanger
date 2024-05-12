@@ -21,7 +21,7 @@ public class MyUserDataStorageService {
         if(myUserOptional.isPresent()) {
             return myUserOptional.get();
         }
-        throw  new IllegalArgumentException("Your account does not exists");
+        throw new IllegalArgumentException("Your account does not exists");
     }
     public Set<User> getMyUserContacts() {
         User myUser = getMyUser();

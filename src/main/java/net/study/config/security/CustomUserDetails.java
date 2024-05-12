@@ -1,6 +1,7 @@
 package net.study.config.security;
 
-import lombok.RequiredArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.Setter;
 import net.study.model.user.Role;
 import net.study.model.user.User;
 import org.springframework.security.core.GrantedAuthority;
@@ -10,9 +11,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-@RequiredArgsConstructor
+@AllArgsConstructor
+@Setter
 public class CustomUserDetails implements UserDetails {
-    private final User user;
+    private User user;
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return user.getRoleList().stream()

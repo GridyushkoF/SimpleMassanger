@@ -18,7 +18,9 @@ import java.util.List;
 @Repository
 public interface MessageRepository extends JpaRepository<Message,Long> {
     @Query("SELECT m FROM Message m WHERE (m.receiver = :receiver AND m.sender = :sender) OR (m.receiver = :sender AND m.sender = :receiver) ORDER BY m.id DESC ")
-    List<Message> findAllByMembers(@Param("sender") User member1, @Param("receiver") User member2, Pageable pageable);
+    List<Message> findAllByMembersDesc(@Param("sender") User member1, @Param("receiver") User member2, Pageable pageable);
+    @Query("SELECT m FROM Message m WHERE (m.receiver = :receiver AND m.sender = :sender) OR (m.receiver = :sender AND m.sender = :receiver) ORDER BY m.id ASC ")
+    List<Message> findAllByMembersAsc(@Param("sender") User member1, @Param("receiver") User member2, Pageable pageable);
     @Query("SELECT m FROM Message m WHERE (m.receiver = :receiver AND m.sender = :sender) OR (m.receiver = :sender AND m.sender = :receiver) ORDER BY m.id DESC")
     List<Message> findLastMessageBySenderAndReceiver(@Param("sender") User sender, @Param("receiver") User receiver, Pageable pageable);
     @Modifying

@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded",  () => {
     updateContacts();
     connectToWebSocket();
     initializeMyUser()
-    scaleElementByMouseWheel ('.full-image-view-img')
+    scaleElementByMouseWheel ($('.zoomable'))
     scaleImageOnClick($('.found-user-avatar'))
     dragula([$('.contacts-container')])
 })

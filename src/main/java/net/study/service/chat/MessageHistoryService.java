@@ -11,11 +11,13 @@ import net.study.repository.UserRepository;
 import net.study.service.MyUserDataStorageService;
 import net.study.util.MessagesPaginationUtil;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.management.InstanceNotFoundException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -54,7 +56,7 @@ public class MessageHistoryService {
             }
         } else {
             Pageable pageable = PageRequest.of(MessagesPaginationUtil.getCurrentPage(), messagesPageSize);
-            messageHistoryList = messageRepository.findAllByMembers(sender, receiver,pageable);
+            messageHistoryList = messageRepository.findAllByMembersDesc(sender, receiver,pageable);
         }
         return getTargetedMessageDtoList(messageHistoryList);
     }
@@ -78,7 +80,7 @@ public class MessageHistoryService {
         int currentPageNumber = pageNumber;
 
         Pageable pageable = PageRequest.of(pageNumber, messagesPageSize);
-        List<Message> messageHistoryList = messageRepository.findAllByMembers(member1, member2, pageable);
+        List<Message> messageHistoryList = messageRepository.findAllByMembersDesc(member1, member2, pageable);
         if (!messageHistoryList.isEmpty()) {
             fullMessageHistoryList.addAll(messageHistoryList);
             for (Message message : messageHistoryList) {
@@ -93,5 +95,16 @@ public class MessageHistoryService {
         }
         // Если список пустой, возвращаем текущий полный список
         return new ArrayList<>();
+    }
+    public long getFirstMessageId(String member2Username) throws InstanceNotFoundException {
+        Optional<User> member2Optional = userRepository.findByUsername(member2Username);
+        if(member2Optional.isPresent()) {
+            User member2 = member2Optional.get();
+            List<Message> firstMessageOptional = messageRepository.findAllByMembersAsc(myUserData.getMyUser(),member2,PageRequest.of(0,1));
+            if(!firstMessageOptional.isEmpty()) {
+                return firstMessageOptional.get(0).getId();
+            }
+        }
+        throw new InstanceNotFoundException("first message is not present!");
     }
 }

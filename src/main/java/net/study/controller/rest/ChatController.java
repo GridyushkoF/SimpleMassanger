@@ -64,6 +64,15 @@ public class ChatController {
         return ResponseEntity.ok(Map.of("message_history",targetedMessageDtoList));
     }
 
+    @GetMapping("/get-first-message/{username}")
+    public ResponseEntity<Map<String,Long>> getFirstMessage(@PathVariable String username) {
+        try {
+            return ResponseEntity.ok(Map.of("first-message-id",messageHistoryService.getFirstMessageId(username)));
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ResponseEntity.notFound().build();
+    }
 
     @GetMapping("/delete-chat-locally/{contact_name}")
     public void deleteContactLocally(@PathVariable(name = "contact_name") String contactName) {
@@ -85,7 +94,7 @@ public class ChatController {
         chatCrudService.forwardMessagesToContacts(contactNameList,messageIdList);
     }
     @GetMapping("get-last-message/{username}")
-    public ResponseEntity<Map<String,String>> getLastMessage(@PathVariable String username) {
+    public ResponseEntity<Map<String, String>> getLastMessage(@PathVariable String username) {
         String lastMessage = messageHistoryService.getLastMessage(username);
         return ResponseEntity.ok(Map.of("last_message_text",lastMessage));
     }

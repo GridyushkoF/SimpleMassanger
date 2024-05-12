@@ -1,8 +1,8 @@
-function setAvatarPathOrDefault(avatarPath, avatarElement) {
+function setAvatarPathIfExistsOrDefaultAvatar(avatarPath, avatarElement,username = myUsername) {
     if (avatarPath !== null && avatarPath !== undefined && !avatarPath.includes('null')) {
         avatarElement.src = avatarPath
     } else {
-        avatarElement.src = '/static/img/noImage.png'
+        avatarElement.src = 'https://api.dicebear.com/8.x/initials/svg?seed=' + username
     }
 }
 function getRandomColor() {
@@ -20,7 +20,6 @@ function highlightContainer(container) {
         container.style.animationName = '';
         container.style.backgroundColor = '';
 
-        // Добавляем эффект временного фейда
         container.style.transition = oldTransition
         container.style.backgroundColor = oldBg;
 
@@ -28,4 +27,11 @@ function highlightContainer(container) {
             container.style.transition = '';
         }, 500);
     }, 1500);
+}
+function setImageGray(image) {
+    image.style.filter = "grayscale(100%)";
+}
+
+function setImageNotGray(image) {
+    image.style.filter = "grayscale(0%)";
 }

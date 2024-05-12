@@ -1,3 +1,55 @@
+const scalingApi = (() => {
+    // current view transform
+    const m = [1, 0, 0, 1, 0, 0];             // alias
+    let scale = 1;              // current scale
+    const pos = { x: 0, y: 0 }; // current position of origin
+    let dirty = true;
+    return {
+        applyTo(el) {
+            if (dirty) {
+                this.update()
+            }
+            el.style.transform = `matrix(${m[0]},${m[1]},${m[2]},${m[3]},${m[4]},${m[5]})`;
+        },
+        update() {
+            dirty = false;
+            m[3] = m[0] = scale;
+            m[2] = m[1] = 0;
+            m[4] = pos.x;
+            m[5] = pos.y;
+        },
+        pan(amount) {
+            if (dirty) {
+                this.update()
+            }
+            pos.x += amount.x;
+            pos.y += amount.y;
+            dirty = true;
+        },
+        scaleAt(at, amount) { // at in screen coords
+            if (dirty) {
+                this.update()
+            }
+            scale *= amount;
+            pos.x = at.x - (at.x - pos.x) * amount;
+            pos.y = at.y - (at.y - pos.y) * amount;
+            dirty = true;
+        },
+        reset() {
+            scale = 1;
+            pos.x = 0;
+            pos.y = 0;
+            m[0] = 1; // scale x
+            m[1] = 0; // skew y
+            m[2] = 0; // skew x
+            m[3] = 1; // scale y
+            m[4] = 0; // translate x
+            m[5] = 0; // translate y
+            dirty = true;
+        }
+    };
+})();
+
 $('.start-search-by-name-btn').onclick = () => {
     searchContactByUsername()
 }
@@ -150,45 +202,59 @@ $all('.avatar').forEach(avatar => {
     }
 })
 
-$('.update-description-btn').onclick = () => {
-    updateDescription()
-}
 $('.add-user-to-contacts-btn').onclick = () => {
     addUserToMyContactList()
 }
+$('.update-username-input').oninput = () => {
+    setImageGray($('.tick'))
+    clearTimeout(writingTimeOutBeforeUpdating);
+    writingTimeOutBeforeUpdating = setTimeout(function() {
+        updateUsernameAndContacts()
+        setImageNotGray($('.tick'))
+    }, 1500);
+}
 
-function scaleElementByMouseWheel(selector) {
-    function addOnWheel(element, handler) {
-        if (element.addEventListener) {
-            if ('onwheel' in document) { // IE9+, FF17+
-                element.addEventListener("wheel", handler);
-            } else if ('onmousewheel' in document) { // устаревший вариант события
-                element.addEventListener("mousewheel", handler);
-            } else { // 3.5 <= Firefox < 17
-                element.addEventListener("MozMousePixelScroll", handler);
-            }
-        } else { // IE8-
-            element.attachEvent("onmousewheel", handler);
+$('.description-textarea').oninput = () => {
+    clearTimeout(writingTimeOutBeforeUpdating);
+    writingTimeOutBeforeUpdating = setTimeout(function() {
+        updateDescription()
+        alert('Успешно сохранено новое описание')
+    }, 1500);
+}
+
+
+function scaleElementByMouseWheel(element) {
+    element.addEventListener("mousemove", mouseEvent, {passive: false});
+    element.addEventListener("mousedown", mouseEvent, {passive: false});
+    element.addEventListener("mouseup", mouseEvent, {passive: false});
+    element.addEventListener("mouseout", mouseEvent, {passive: false});
+    element.addEventListener("wheel", mouseWheelEvent, {passive: false});
+    const mouse = {x: 0, y: 0, oldX: 0, oldY: 0, button: false};
+    function mouseEvent(event) {
+        if (event.type === "mousedown") { mouse.button = true }
+        if (event.type === "mouseup" || event.type === "mouseout") { mouse.button = false }
+        mouse.oldX = mouse.x;
+        mouse.oldY = mouse.y;
+        mouse.x = event.pageX;
+        mouse.y = event.pageY;
+        if(mouse.button) { // pan
+            scalingApi.pan({x: mouse.x - mouse.oldX, y: mouse.y - mouse.oldY});
+            scalingApi.applyTo(element);
         }
+        event.preventDefault();
     }
-
-    let scale = 1;
-    const minScale = 0.3;
-    const maxScale = 5;
-    function scaleElement(e) {
-        let delta = e.deltaY || e.detail || e.wheelDelta;
-        if (delta > 0) {
-            scale = scale >= minScale ? scale - 0.1 : scale;
+    function mouseWheelEvent(event) {
+        const x = event.pageX - (element.width / 2);
+        const y = event.pageY - (element.height / 2);
+        if (event.deltaY < 0) {
+            scalingApi.scaleAt({x, y}, 1.1);
+            scalingApi.applyTo(element);
         } else {
-            scale = scale < maxScale ? scale + 0.1 : scale;
+            scalingApi.scaleAt({x, y}, 1 / 1.1);
+            scalingApi.applyTo(element);
         }
-        element.style.transform = 'scale(' + scale + ')';
-        e.preventDefault();
+        event.preventDefault();
     }
-
-    // Замените 'element' на реальный элемент, к которому вы хотите применить масштабирование
-    let element = $(selector)
-    addOnWheel(element, function(e) { scaleElement(e); });
 }
 function scaleImageOnClick(image) {
     image.onclick = (event) => {
@@ -212,9 +278,12 @@ function hoverContactDeletionBtnOnClick(contactContainer) {
 }
 function scalePinnedImageOnClick(pinnedImage) {
     pinnedImage.onclick = (event) => {
-        event.stopPropagation()
-        $('.full-image-view-img').src = pinnedImage.getAttribute('file-download-link')
-        showElement($('.full-image-view-overlay'))
+        event.stopPropagation();
+        const fullImageViewImg = $('.full-image-view-img');
+        fullImageViewImg.src = pinnedImage.getAttribute('file-download-link');
+        scalingApi.reset(); // Сбросить масштаб и позицию
+        scalingApi.applyTo(fullImageViewImg); // Применить сброс к текущему изображению
+        showElement($('.full-image-view-overlay'));
     }
 }
 function hideButtonIfSelectedMoreThan1Message(buttonElement) {

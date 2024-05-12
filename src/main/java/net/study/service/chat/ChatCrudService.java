@@ -13,10 +13,14 @@ import net.study.repository.UserRepository;
 import net.study.repository.VotingRepository;
 import net.study.service.ImageStorageService;
 import net.study.service.MyUserDataStorageService;
+import net.study.service.UserService;
 import net.study.service.websocket.MessageNotificatorService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
@@ -37,6 +41,7 @@ public class ChatCrudService {
     private final VotingRepository votingRepository;
     private final MyUserDataStorageService myUserData;
     private final UnreadMessagesService unreadMessagesService;
+    private final ApplicationEventPublisher eventPublisher;
     private String currentSelectedContactName = "";
     public void setCurrentSelectedContactName(String currentSelectedContactName) {
         this.currentSelectedContactName = currentSelectedContactName;
@@ -85,11 +90,19 @@ public class ChatCrudService {
                 operations.add(messageDtoMapper.convertToTargetedDto(message, MessageTarget.DELETE));
             }
         });
+        eventPublisher.publishEvent(new MessagesDeletedEvent(operations));
         System.out.println("OPERATIONS: " + operations.size());
         messageRepository.deleteBatchByIds(messageIdList);
-        if(!operations.isEmpty() && shouldNotify) {
-            messageNotificator.notifyUserByBatch(operations.get(0).getReceiver().getUsername(),operations);
-        }
+
+
+    }
+    public record MessagesDeletedEvent(List<TargetedMessageDto> deleteOperations) {
+    }
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    public void updateDependentContactsAfterUsernameUpdated(MessagesDeletedEvent event) {
+        List<TargetedMessageDto> deleteOperations = event.deleteOperations();
+        String receiverUsername = deleteOperations.get(0).getReceiver().getUsername();
+        messageNotificator.notifyUserByBatch(receiverUsername,deleteOperations);
     }
     public static List<Message> sortMessageListByIdDesc(List<Message> messageList) {
         List<Message> copy = new ArrayList<>(messageList);
@@ -144,7 +157,7 @@ public class ChatCrudService {
         return userRepository.findByUsername(username);
     }
     @Transactional
-    public void forwardMessagesToContacts(List<String> contactIdList,List<Long> messageIdList) {
+    public void forwardMessagesToContacts(List<String> contactIdList, List<Long> messageIdList) {
         System.out.println(contactIdList);
         User sender = myUserData.getMyUser();
         contactIdList.stream().map(userRepository::findByUsername)

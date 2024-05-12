@@ -27,5 +27,4 @@ public @Data class VotingToDeleteChat {
         this.member1 = member1;
         this.member2 = member2;
     }
-
 }

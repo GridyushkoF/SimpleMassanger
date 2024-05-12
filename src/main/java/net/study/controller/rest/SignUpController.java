@@ -17,7 +17,7 @@ public class SignUpController {
     private final UserService userService;
     private final UserRepository userRepository;
     @PostMapping("/sign-up")
-    public ResponseEntity<Map<String,String>> signUpNewUser(@RequestBody User user) {
+    public ResponseEntity<Map<String, String>> signUpNewUser(@RequestBody User user) {
         if(userRepository.existsByUsername(user.getUsername()))
         {
             return ResponseEntity.ok(Map.of("is_signup_success","false","error_message","Имя пользователя занято"));

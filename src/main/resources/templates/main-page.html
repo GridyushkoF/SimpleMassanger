@@ -9,17 +9,16 @@
     <script src="/static/js/other-libraries/stomp.js" defer></script>
     <script src="/static/js/other-libraries/sock.js" defer></script>
     <script src="/static/js/other-libraries/dragula.min.js" defer></script>
-    <script src="/static/js/other-libraries/dragscroll.js" defer></script>
 
     <script src="/static/js/main-js-split/dom-utils.js" defer></script>
     <script src="/static/js/main-js-split/ajax.js" defer></script>
     <script src="/static/js/initializr.js" defer></script>
+    <script src ="/static/js/main-js-split/design-functions.js" defer></script>
     <script src="/static/js/main-js-split/global-variables.js" defer></script>
     <script src="/static/js/main-js-split/event-listeners.js" defer></script>
     <script src="/static/js/main-js-split/templating.js" defer></script>
     <script src="/static/js/main-js-split/template-popups.js" defer></script>
     <script src="/static/js/main-js-split/selection-and-search.js" defer></script>
-    <script src ="/static/js/main-js-split/design-functions.js" defer></script>
 
 
 </head>
@@ -37,15 +36,15 @@
             <label>
                 <input  class="search-query-input" type="text" placeholder="Введите имя пользователя">
             </label>
-            <button
-                     class="start-search-by-name-btn">
-<!--                <img class="search-img" src="/static/img/search.png" alt="Картинка поиска(кнопка справа)">-->
+            <button class="start-search-by-name-btn">
                 <p class="search-text">Найти</p>
             </button>
         </div>
         <div class="massager-main">
-            <div class="scrollable contacts-container">
+            <div class="contacts-main">
                 <p class="my-contacts-text">Мои контакты:</p>
+                <div class="scrollable contacts-container">
+                </div>
             </div>
             <p class="contact-not-selected-alert">
                 Выделите чат, чтобы отправлять сообщения
@@ -100,9 +99,13 @@
             <div class="popup-menu profile-menu">
                 <button class="exit-popup-btn">X</button>
                 <div class="wrap avatar-container">
-
+                    <label class="update-username-label" for="update-username-input">
+                        <p>Ваше имя пользователя: </p>
+                        <input id="update-username-input" class="update-username-input">
+                        <img class="tick" src="/static/img/GreenTick.png" alt="Если галочка горит серым, значит изменения еще не вступили в силу, если зеленым, то вступили">
+                    </label>
                     <label class="update-profile-avatar-label" for="update-profile-avatar-input">
-                        <img src="/static/avatars/noImage.png" class="avatar loadable" alt="my avatar/upload image">
+                        <img src="/static/avatars/noImage.png" class="avatar my-avatar loadable" alt="my avatar/upload image">
 <!--                        <img class="upload-file-img" src="/static/img/upload.png" alt="Загрузить файл для аватарки">-->
 <!--                        <p class="upload-file-text">Загрузить файл</p>-->
                         <input id="update-profile-avatar-input" class="update-profile-avatar-input" type="file" accept="image/*">
@@ -111,7 +114,6 @@
                 </div>
                 <div class="wrap description-container">
                     <textarea class="scrollable description-textarea" placeholder="Введите описание"></textarea>
-                    <button class="update-description-btn">Сохранить описание</button>
                 </div>
 
 
@@ -142,12 +144,14 @@
             </div>
         </div>
         <div class="popup-overlay full-image-view-overlay disabled">
-            <div class="free dragscroll popup-menu full-image-view-menu">
+            <div class="popup-menu full-image-view-menu">
                 <div class="fixed-menu">
                     <button class="exit-popup-btn">X</button>
                     <p>Картинка в полном масштабе:</p>
                 </div>
-                <img class="full-image-view-img" src="" alt="">
+                <div class="full-image-view-container">
+                    <img class="full-image-view-img zoomable" src="" alt="">
+                </div>
             </div>
         </div>
         <div class="popup-overlay found-users-overlay disabled">

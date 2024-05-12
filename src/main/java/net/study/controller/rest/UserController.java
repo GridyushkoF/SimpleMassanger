@@ -27,7 +27,12 @@ public class UserController {
         return ResponseEntity.ok(Map.of("my_user_contacts",myUserData.getMyUserContacts()));
     }
     @GetMapping("/get-my-user")
-    public ResponseEntity<Map<String,User>> getMyUser() {
+    public ResponseEntity<Map<String, User>> getMyUser() {
         return ResponseEntity.ok(Map.of("my_user",userService.findByUsername(myUserData.getMyUsername()).orElseGet(User::new)));
+    }
+    @GetMapping("/update-my-username/{newUsername}")
+    public ResponseEntity<Map<String,Boolean>> updateMyUsername(@PathVariable String newUsername) {
+        boolean isSuccess = userService.updateMyUsername(newUsername);
+        return ResponseEntity.ok(Map.of("is_successful_updated",isSuccess));
     }
 }

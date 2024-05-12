@@ -46,7 +46,6 @@ public @Data class Message implements Comparable<Message> {
         targetId = id;
     }
     public void setCurrentDateTime (boolean isChanged) {
-
         LocalDateTime now = LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
         String formattedDate = now.format(formatter);
