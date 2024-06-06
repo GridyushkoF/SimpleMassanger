@@ -34,6 +34,9 @@ public class UserService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
     }
+    public boolean existsByUsername (String username) {
+        return userRepository.existsByUsername(username);
+    }
 
     public Optional<User> findByUsername(String username) {
         return userRepository.findByUsername(username);
@@ -71,12 +74,7 @@ public class UserService {
             myUser.setUsername(newUsername);
             userRepository.save(myUser);
 
-            List<User> dependentContacts = userRepository.findAllByContactUsernameSetContains(oldUsername);
-            dependentContacts.forEach(dependentContact -> {
-                dependentContact.getContactUsernameSet().remove(oldUsername);
-                dependentContact.getContactUsernameSet().add(newUsername);
-                userRepository.save(dependentContact);
-            });
+            List<User> dependentContacts = setNewUsernameForDependentContacts(newUsername, oldUsername);
 
             CustomUserDetails customUserDetails = new CustomUserDetails(myUser);
             Authentication newAuth = new UsernamePasswordAuthenticationToken(newUsername, myUser.getPassword(), customUserDetails.getAuthorities());
@@ -86,6 +84,16 @@ public class UserService {
             return true;
         }
         return false;
+    }
+
+    private List<User> setNewUsernameForDependentContacts(String newUsername, String oldUsername) {
+        List<User> dependentContacts = userRepository.findAllByContactUsernameSetContains(oldUsername);
+        dependentContacts.forEach(dependentContact -> {
+            dependentContact.getContactUsernameSet().remove(oldUsername);
+            dependentContact.getContactUsernameSet().add(newUsername);
+            userRepository.save(dependentContact);
+        });
+        return dependentContacts;
     }
 
 

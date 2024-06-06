@@ -1,9 +1,10 @@
 document.addEventListener("DOMContentLoaded",  () => {
     updateSelectedContactNameOnServer()
     updateContacts();
-    connectToWebSocket();
     initializeMyUser()
+    connectToWebSocket();
     scaleElementByMouseWheel ($('.zoomable'))
     scaleImageOnClick($('.found-user-avatar'))
     dragula([$('.contacts-container')])
+    monitorUserActivity()
 })

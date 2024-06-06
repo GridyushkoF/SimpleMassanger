@@ -3,6 +3,7 @@ package net.study.service;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import net.study.model.Message;
+import net.study.model.redis.ActivityType;
 import net.study.model.user.User;
 import net.study.repository.MessageRepository;
 import net.study.repository.UnreadMessageRepository;
@@ -11,13 +12,12 @@ import net.study.repository.VotingRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +26,7 @@ public class EntityTestInitService {
     private final MessageRepository messageRepository;
     private final PasswordEncoder bcrypt;
     private final VotingRepository votingRepository;
-    private final UnreadMessageRepository unreadMessageRepository;
+    private final UnreadMessageRepository unreadMessageRepository;;
     @Transactional
     public void initTestUserWithPassword1(String username) {
         unreadMessageRepository.deleteAll();

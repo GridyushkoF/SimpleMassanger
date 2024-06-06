@@ -1,6 +1,8 @@
 package net.study.model.user;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NonNull;
@@ -31,6 +33,7 @@ public @Data class User implements Comparable<User> {
     @ElementCollection(fetch = FetchType.EAGER)
     private Set<String> contactUsernameSet;
     private String description;
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
     private LocalDateTime creationDateTime;
 
     public User(String username, String password, String avatarName, List<Role> roleList, Set<String> contactUsernameSet, String description) {

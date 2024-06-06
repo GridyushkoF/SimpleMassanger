@@ -6,6 +6,19 @@ function searchContactByUsername() {
             showFoundUser(result['found_user'])
         })
 }
+// function sendHeartbeat() {
+//     fetch('/mark-online-status', {
+//         method: 'GET',
+//         headers: {
+//             'Content-Type': 'application/json'
+//         }
+//     })
+//     .catch(error => {
+//         console.error('Error sending heartbeat:', error);
+//     });
+// }
+//
+// setInterval(sendHeartbeat, 5000);
 function updateContacts(containerToShow = $('.contacts-container'), shouldUpdateMessageHistory = true) {
     clearAllContactsInContainer(containerToShow)
 
@@ -226,6 +239,21 @@ function addUserToMyContactList() {
             hideElement($('.found-users-overlay'))
         })
 }
+function monitorUserActivity() {
+    const socket = new WebSocket("ws://" + window.location.host + "/user-activity");
+    socket.onopen = () => {
+        console.log('Connection opened')
+    }
+    socket.onclose = (event) => {
+        console.log("Connection closed. Code: ", event.code, " Reason: ", event.reason);
+    };
+    socket.onerror = (event) => {
+        console.error("Error occurred: ", event);
+    };
+    socket.onmessage = () => {
+        console.log('new message')
+    }
+}
 function connectToWebSocket() {
     const socketJs = new SockJS('/messages');
     stompClient = Stomp.over(socketJs);
@@ -242,10 +270,8 @@ function connectToWebSocket() {
                 })
                 return;
             }
-            if(messageJson.sender) {
-                if(messageJson.sender.username !== myUsername && messageJson.target === 'CREATE') {
-                    sound.play(1,false)
-                }
+            if(messageJson.sender && (messageJson.sender.username !== myUsername && messageJson.target === 'CREATE')) {
+                sound.play(1,false)
             }
             showMessage(messageJson);
         });

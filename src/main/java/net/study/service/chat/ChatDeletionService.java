@@ -10,7 +10,7 @@ import net.study.repository.MessageRepository;
 import net.study.repository.UserRepository;
 import net.study.repository.VotingRepository;
 import net.study.service.MyUserDataStorageService;
-import net.study.service.websocket.ChatClearingNotificator;
+import net.study.service.websocket.ChatClearingNotificatorService;
 import net.study.service.websocket.ContactNotificatorService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,7 +26,7 @@ public class ChatDeletionService {
     private final ContactNotificatorService contactNotificator;
     private final VotingRepository votingRepository;
     private final MyUserDataStorageService myUserData;
-    private final ChatClearingNotificator chatClearingNotificator;
+    private final ChatClearingNotificatorService chatClearingNotificatorService;
     private final ChatCrudService chatCrudService;
     private final MessageDtoMapper messageDtoMapper;
     public void deleteChatLocally(String contactToDelete) {
@@ -34,7 +34,7 @@ public class ChatDeletionService {
         myUser.getContactUsernameSet().remove(contactToDelete);
         userRepository.save(myUser);
         contactNotificator.updateContacts(myUser.getUsername());
-        chatClearingNotificator.notifyUserAboutClearing(contactToDelete);
+        chatClearingNotificatorService.notifyUserAboutClearing(contactToDelete);
     }
     public void sendChatDeletionRequest(String contact) {
         System.out.println(userRepository.findByUsername(contact).isPresent());
@@ -99,9 +99,9 @@ public class ChatDeletionService {
     }
     public void deleteChat(User member1, User member2) {
         List<Message> allMessagesInThisChat = messageRepository.findAllByMembersDesc(member1, member2, Pageable.unpaged());
-        chatClearingNotificator.notifyUserAboutClearing(member2.getUsername());
+        chatClearingNotificatorService.notifyUserAboutClearing(member2.getUsername());
         if(!member1.getUsername().equals(member2.getUsername())) {
-            chatClearingNotificator.notifyUserAboutClearing(member1.getUsername());
+            chatClearingNotificatorService.notifyUserAboutClearing(member1.getUsername());
         }
         member1.getContactUsernameSet().remove(member2.getUsername());
         userRepository.save(member1);

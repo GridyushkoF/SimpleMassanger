@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class ChatClearingNotificator {
+public class ChatClearingNotificatorService {
     private final SimpMessagingTemplate messagingTemplate;
     public void notifyUserAboutClearing(String username) {
         messagingTemplate.convertAndSendToUser(username,"/topic/chat-clearing","");

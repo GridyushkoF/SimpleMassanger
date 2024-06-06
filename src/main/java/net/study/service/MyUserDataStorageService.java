@@ -1,17 +1,22 @@
 package net.study.service;
 
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import net.study.model.user.User;
 import net.study.repository.UserRepository;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
+@Data
 public class MyUserDataStorageService {
     private final UserRepository userRepository;
     public User getMyUser() {
@@ -34,5 +39,8 @@ public class MyUserDataStorageService {
     }
     public String getMyUsername () {
             return getMyUser().getUsername();
+    }
+    public boolean isMyUserPresent (){
+        return SecurityContextHolder.getContext().getAuthentication() != null;
     }
 }
