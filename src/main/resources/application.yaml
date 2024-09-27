@@ -4,8 +4,8 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
   datasource:
-    username: ${DB_LOGIN}
-    password: ${DB_PASSWORD}
+    username: root
+    password: testtest
     url: jdbc:mysql://localhost:3306/qbyx_database?autoReconnect=true&rewriteBatchedStatements=true
   jpa:
     properties:
@@ -30,8 +30,13 @@ spring:
       port: 6379
       password: ''
       database: 0
+
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
 server:
-  port: 9000
+  port: 80
 avatars-path: ${AVATARS_PATH}
 pinned-images-path: ${PINNED_IMAGES_PATH}
 pagination:

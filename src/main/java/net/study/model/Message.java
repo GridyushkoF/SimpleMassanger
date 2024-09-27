@@ -15,9 +15,9 @@ import java.time.format.DateTimeFormatter;
 @NoArgsConstructor
 
 public @Data class Message implements Comparable<Message> {
-    @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
     @Column(name = "message_text",columnDefinition = "MEDIUMTEXT")
     private String messageText;
@@ -25,6 +25,7 @@ public @Data class Message implements Comparable<Message> {
     private User sender;
     @ManyToOne
     private User receiver;
+    @Column(name = "date_time")
     private String dateTime;
     @Enumerated(EnumType.STRING)
     private MessageTarget target;

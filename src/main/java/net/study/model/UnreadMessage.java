@@ -9,7 +9,8 @@ import net.study.model.user.User;
 @NoArgsConstructor
 public @Data class UnreadMessage {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
     @ManyToOne
     private User user;

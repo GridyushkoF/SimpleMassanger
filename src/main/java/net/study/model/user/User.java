@@ -16,9 +16,9 @@ import java.util.Set;
         @Index(name = "username_FK", columnList = "name")
 })
 public @Data class User implements Comparable<User> {
-    @Column(name = "id")
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
     @Column(name = "name")
     private String username;
@@ -34,6 +34,7 @@ public @Data class User implements Comparable<User> {
     private Set<String> contactUsernameSet;
     private String description;
     @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @Column(name = "creation_date_time")
     private LocalDateTime creationDateTime;
 
     public User(String username, String password, String avatarName, List<Role> roleList, Set<String> contactUsernameSet, String description) {

@@ -11,7 +11,8 @@ import java.util.Set;
 @NoArgsConstructor
 public @Data class VotingToDeleteChat {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
     private Long confirmVotesAmount;
     private Long declineVotesAmount;

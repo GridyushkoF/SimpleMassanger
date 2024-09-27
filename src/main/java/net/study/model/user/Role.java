@@ -9,7 +9,7 @@ import lombok.Data;
 public @Data class Role {
     @Column(name = "id")
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @Column(name = "role_name")
     @JsonProperty(namespace = "role_name")
