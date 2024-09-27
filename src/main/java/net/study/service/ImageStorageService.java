@@ -12,6 +12,7 @@ import java.util.UUID;
 @Log4j2
 public class ImageStorageService {
     public String uploadImageAndReturnFileName(MultipartFile image, String path) {
+        createFolderIfNotExists(path);
         String imageName = generateFilename(getMultipartFileExtension(image));
         File newImageFile = new File(path + "/" + imageName);
         try {
@@ -21,6 +22,14 @@ public class ImageStorageService {
         }
         return imageName;
     }
+
+    private static void createFolderIfNotExists(String path) {
+        File uploadingDirectory = new File(path);
+        if(!uploadingDirectory.exists()) {
+            uploadingDirectory.mkdirs();
+        }
+    }
+
     public void deleteImage(String path) {
         boolean isSuccessfulDeleted = new File(path).delete();
         if(!isSuccessfulDeleted) {

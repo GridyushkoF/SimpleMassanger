@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>net</groupId>
-	<artifactId>study</artifactId>
+	<artifactId>social-network</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>SocialNetwork</name>
 	<description>SocialNetwork</description>

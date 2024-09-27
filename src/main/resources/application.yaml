@@ -37,8 +37,8 @@ spring:
     enabled: true
 server:
   port: 80
-avatars-path: ${AVATARS_PATH}
-pinned-images-path: ${PINNED_IMAGES_PATH}
+avatars-path: ${AVATARS_PATH:C:/tempDataSocialNetwork/avatars}
+pinned-images-path: ${PINNED_IMAGES_PATH:C:/tempDataSocialNetwork/pinned_images}
 pagination:
   messages:
     page-size: 30
