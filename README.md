@@ -24,9 +24,10 @@ log in, write messages, edit, delete, and so on. You will be able to find other 
 5. Spring Security
 6. Spring WebSocket
 7. Thymeleaf
-8. MySQL
-9. Log4j2
-10. Lombok
+8. MySQL & Redis
+9. Liquibase
+11. Log4j2
+12. Lombok
 ## How to run?
 1. Download last release in https://github.com/GridyushkoF/SimpleMassanger/releases (archive) and application.yaml file)
 2. Unpack the archive and get jar-file. (jar file must be in same folder with application.yaml!)
